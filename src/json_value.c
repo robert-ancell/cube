@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,9 +122,58 @@ static char *array_to_string(size_t length, JsonValue **elements) {
   return append_string(string, "]");
 }
 
+static char *append_integer(char *string, uint64_t integer) {
+  uint64_t divisor = 1;
+  while (integer / (divisor * 10) != 0) {
+    divisor *= 10;
+  }
+  do {
+    uint64_t digit = integer / divisor;
+    string = append_hex(string, digit);
+    integer -= digit * divisor;
+    divisor /= 10;
+  } while (divisor != 0);
+
+  return string;
+}
+
+static char *append_fraction(char *string, double fraction) {
+  if (fraction == 0) {
+    return string;
+  }
+
+  string = append_string(string, ".");
+  while (fraction != 0.0) {
+    uint64_t digit = fraction * 10.0;
+    string = append_hex(string, digit);
+    fraction = fraction * 10.0 - digit;
+  }
+
+  return string;
+}
+
+static char *append_exponent(char *string, uint64_t exponent) {
+  if (exponent == 0) {
+    return string;
+  }
+
+  string = append_string(string, "e");
+  return append_integer(string, exponent);
+}
+
 static char *number_to_string(double number) {
-  // FIXME
-  return strdup("0");
+  char *string = strdup("");
+  double integer;
+  double fraction = modf(number, &integer);
+  if (integer < 0) {
+    string = append_string(string, "-");
+    integer = -integer;
+  }
+  string = append_integer(string, integer);
+  string = append_fraction(string, fraction);
+  string = append_exponent(string, 0); // FIXME
+
+  return string;
 }
 
 static JsonValue *json_value_new(JsonValueType type) {

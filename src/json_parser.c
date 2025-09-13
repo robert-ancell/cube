@@ -215,7 +215,108 @@ static JsonValue *parse_array(JsonParser *self) {
   return array;
 }
 
-static JsonValue *parse_number(JsonParser *self) { return NULL; }
+static bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+static uint64_t parse_digits(JsonParser *self, size_t *count) {
+  *count = 0;
+  if (!is_digit(self->text[self->offset])) {
+    return 0;
+  }
+
+  uint64_t digits = 0;
+  do {
+    digits = digits * 10 + self->text[self->offset] - '0';
+    self->offset++;
+    (*count)++;
+  } while (is_digit(self->text[self->offset]));
+
+  return digits;
+}
+
+static bool parse_integer(JsonParser *self, int64_t *sign, int64_t *integer) {
+  *sign = 1;
+  if (parse_constant(self, "-")) {
+    *sign = -1;
+  }
+
+  if (parse_constant(self, "0")) {
+    *integer = 0;
+    return true;
+  }
+
+  size_t digits_count;
+  uint64_t digits = parse_digits(self, &digits_count);
+  if (digits_count == 0) {
+    return false;
+  }
+  *integer = digits;
+  return true;
+}
+
+static bool parse_fraction(JsonParser *self, uint64_t *fraction_numerator,
+                           uint64_t *fraction_denominator) {
+  if (!parse_constant(self, ".")) {
+    *fraction_numerator = 0;
+    *fraction_denominator = 1;
+    return true;
+  }
+
+  size_t digits_count;
+  *fraction_numerator = parse_digits(self, &digits_count);
+  if (digits_count == 0) {
+    return false;
+  }
+  *fraction_denominator = 1;
+  for (size_t i = 0; i < digits_count; i++) {
+    *fraction_denominator *= 10;
+  }
+
+  return true;
+}
+
+static bool parse_exponent(JsonParser *self, int64_t *exponent) {
+  if (!parse_constant(self, "e") || !parse_constant(self, "E")) {
+    *exponent = 0;
+    return true;
+  }
+
+  int64_t sign;
+  switch (self->text[self->offset]) {
+  case '+':
+    sign = 1;
+    self->offset++;
+    break;
+  case '-':
+    sign = -1;
+    self->offset++;
+    break;
+  default:
+    sign = 1;
+    break;
+  }
+
+  size_t digits_count;
+  uint64_t digits = parse_digits(self, &digits_count);
+  if (digits_count == 0) {
+    return false;
+  }
+  *exponent = sign * digits;
+  return true;
+}
+
+static JsonValue *parse_number(JsonParser *self) {
+  int64_t sign, integer, exponent;
+  uint64_t fraction_numerator, fraction_denominator;
+  if (!parse_integer(self, &sign, &integer) ||
+      !parse_fraction(self, &fraction_numerator, &fraction_denominator) ||
+      !parse_exponent(self, &exponent)) {
+    return NULL;
+  }
+
+  double fraction = (double)fraction_numerator / (double)fraction_denominator;
+  double number = sign * (integer + fraction);
+  return json_value_new_number(number);
+}
 
 static JsonValue *parse_true(JsonParser *self) {
   return parse_constant(self, "true") ? json_value_new_true() : NULL;
