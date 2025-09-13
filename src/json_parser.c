@@ -1,9 +1,11 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "json_parser.h"
+#include "utf8.h"
 
 struct _JsonParser {
   const char *text;
@@ -45,14 +47,90 @@ static JsonValue *parse_string(JsonParser *self) {
     return NULL;
   }
 
-  // FIXME
+  char *string = strdup("");
+  while (self->text[self->offset] != '\0' && self->text[self->offset] != '\"') {
+    uint32_t c;
+    if (self->text[self->offset] == '\\') {
+      self->offset++;
+      switch (self->text[self->offset]) {
+      case '"':
+        self->offset++;
+        c = '"';
+        break;
+      case '\\':
+        self->offset++;
+        c = '\\';
+        break;
+      case '/':
+        self->offset++;
+        c = '/';
+        break;
+      case 'b':
+        self->offset++;
+        c = '\b';
+        break;
+      case 'f':
+        self->offset++;
+        c = '\f';
+        break;
+      case 'n':
+        self->offset++;
+        c = '\n';
+        break;
+      case 'r':
+        self->offset++;
+        c = '\r';
+        break;
+      case 't':
+        self->offset++;
+        c = '\t';
+        break;
+      case 'u':
+        self->offset++;
+        c = 0;
+        for (size_t i = 0; i < 4; i++) {
+          char hex = self->text[self->offset];
+          if (hex >= '0' && hex <= '9') {
+            hex -= '0';
+          } else if (hex >= 'a' && hex <= 'f') {
+            hex -= 'a';
+          } else if (hex >= 'A' && hex <= 'F') {
+            hex -= 'A';
+          } else {
+            set_error(self, JSON_PARSER_ERROR_INVALID_STRING_ESCAPE);
+            free(string);
+            return NULL;
+          }
+          c = c << 8 | hex;
+          self->offset++;
+        }
+        break;
+      default:
+        set_error(self, JSON_PARSER_ERROR_INVALID_STRING_ESCAPE);
+        free(string);
+        return NULL;
+      }
+    } else {
+      size_t c_length;
+      c = utf8_read_codepoint(self->text + self->offset, &c_length);
+      if (c == 0) {
+        set_error(self, JSON_PARSER_ERROR_INVALID_CODEPOINT);
+        free(string);
+        return NULL;
+      }
+      self->offset += c_length;
+    }
+    string = utf8_append_codepoint(string, c);
+    assert(string != NULL);
+  }
 
   if (!parse_constant(self, "\"")) {
     set_error(self, JSON_PARSER_ERROR_UNTERMINATED_STRING);
+    free(string);
     return NULL;
   }
 
-  return json_value_new_string("");
+  return json_value_new_string_take(string);
 }
 
 static JsonValue *parse_element(JsonParser *self);

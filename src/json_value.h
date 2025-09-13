@@ -16,9 +16,11 @@ JsonValue *json_value_new_object();
 
 JsonValue *json_value_new_array();
 
-JsonValue *json_value_new_string();
+JsonValue *json_value_new_string(const char *string);
 
-JsonValue *json_value_new_number();
+JsonValue *json_value_new_string_take(char *string);
+
+JsonValue *json_value_new_number(double number);
 
 JsonValue *json_value_new_true();
 
@@ -43,5 +45,7 @@ void json_value_set_member(JsonValue *self, const char *name, JsonValue *value);
 
 /// Add [element] to the end of an array.
 void json_value_add_element(JsonValue *self, JsonValue *element);
+
+char *json_value_to_string(JsonValue *self);
 
 void json_value_free(JsonValue *self);

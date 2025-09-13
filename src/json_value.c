@@ -1,8 +1,10 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "json_value.h"
+#include "utf8.h"
 
 struct _JsonValue {
   JsonValueType type;
@@ -20,6 +22,109 @@ struct _JsonValue {
     double number;
   } data;
 };
+
+static char *append_string(char *string, char *text) {
+  size_t string_length = strlen(string);
+  size_t text_length = strlen(text);
+  string = realloc(string, string_length + text_length + 1);
+  for (size_t i = 0; i <= text_length; i++) {
+    string[string_length + i] = text[i];
+  }
+  return string;
+}
+
+static char *append_escape(char *string, char escape) {
+  string = append_string(string, "\\");
+  return utf8_append_codepoint(string, escape);
+}
+
+static char *append_hex(char *string, uint32_t value) {
+  if (value <= 9) {
+    return utf8_append_codepoint(string, '0' + value);
+  } else if (value <= 15) {
+    return utf8_append_codepoint(string, 'a' + value - 10);
+  } else {
+    assert(false);
+  }
+}
+
+static char *append_hex_escape(char *string, uint32_t codepoint) {
+  string = append_string(string, "\\u");
+  string = append_hex(string, (codepoint >> 24) & 0xff);
+  string = append_hex(string, (codepoint >> 16) & 0xff);
+  string = append_hex(string, (codepoint >> 8) & 0xff);
+  return append_hex(string, codepoint & 0xff);
+}
+
+static char *string_to_string(const char *string) {
+  char *encoded = strdup("\"");
+
+  size_t offset = 0;
+  while (string[offset] != '\0') {
+    size_t length;
+    uint32_t c = utf8_read_codepoint(string + offset, &length);
+    if (length == 0) {
+      // FIXME: Invalid codepoint char
+      break;
+    }
+
+    if (c == '\"' || c == '\\') {
+      encoded = append_escape(encoded, c);
+    } else if (c == '\b') {
+      encoded = append_escape(encoded, 'b');
+    } else if (c == '\f') {
+      encoded = append_escape(encoded, 'f');
+    } else if (c == '\n') {
+      encoded = append_escape(encoded, 'n');
+    } else if (c == '\r') {
+      encoded = append_escape(encoded, 'r');
+    } else if (c == '\t') {
+      encoded = append_escape(encoded, 't');
+    } else if (c < 0x20) {
+      encoded = append_hex_escape(encoded, c);
+    } else {
+      encoded = utf8_append_codepoint(encoded, c);
+    }
+    offset += length;
+  }
+
+  return append_string(encoded, "\"");
+}
+
+static char *object_to_string(size_t length, char **names, JsonValue **values) {
+  char *string = strdup("{");
+  for (size_t i = 0; i < length; i++) {
+    if (i != 0) {
+      string = append_string(string, ",");
+    }
+    char *name_string = string_to_string(names[i]);
+    char *value_string = json_value_to_string(values[i]);
+    string = append_string(string, name_string);
+    string = append_string(string, ":");
+    string = append_string(string, value_string);
+    free(name_string);
+    free(value_string);
+  }
+  return append_string(string, "}");
+}
+
+static char *array_to_string(size_t length, JsonValue **elements) {
+  char *string = strdup("[");
+  for (size_t i = 0; i < length; i++) {
+    if (i != 0) {
+      string = append_string(string, ",");
+    }
+    char *element_string = json_value_to_string(elements[i]);
+    string = append_string(string, element_string);
+    free(element_string);
+  }
+  return append_string(string, "]");
+}
+
+static char *number_to_string(double number) {
+  // FIXME
+  return strdup("0");
+}
 
 static JsonValue *json_value_new(JsonValueType type) {
   JsonValue *self = malloc(sizeof(JsonValue));
@@ -58,12 +163,22 @@ JsonValue *json_value_new_array() {
   return json_value_new(JSON_VALUE_TYPE_ARRAY);
 }
 
-JsonValue *json_value_new_string() {
-  return json_value_new(JSON_VALUE_TYPE_STRING);
+JsonValue *json_value_new_string(const char *string) {
+  assert(string != NULL);
+  return json_value_new_string_take(strdup(string));
 }
 
-JsonValue *json_value_new_number() {
-  return json_value_new(JSON_VALUE_TYPE_NUMBER);
+JsonValue *json_value_new_string_take(char *string) {
+  assert(string != NULL);
+  JsonValue *value = json_value_new(JSON_VALUE_TYPE_STRING);
+  value->data.string = string;
+  return value;
+}
+
+JsonValue *json_value_new_number(double number) {
+  JsonValue *value = json_value_new(JSON_VALUE_TYPE_NUMBER);
+  value->data.number = number;
+  return value;
 }
 
 JsonValue *json_value_new_true() {
@@ -82,6 +197,7 @@ JsonValueType json_value_get_type(JsonValue *self) { return self->type; }
 
 JsonValue *json_value_get_member(JsonValue *self, const char *name) {
   assert(self->type == JSON_VALUE_TYPE_OBJECT);
+  assert(name != NULL);
   for (size_t i = 0; i < self->data.object.length; i++) {
     if (strcmp(self->data.object.names[i], name) == 0) {
       return self->data.object.values[i];
@@ -114,6 +230,8 @@ double json_value_get_number(JsonValue *self) {
 void json_value_set_member(JsonValue *self, const char *name,
                            JsonValue *value) {
   assert(self->type == JSON_VALUE_TYPE_OBJECT);
+  assert(name != NULL);
+  assert(value != NULL);
   self->data.object.length++;
   self->data.object.names = realloc(self->data.object.names,
                                     self->data.object.length * sizeof(char *));
@@ -125,10 +243,33 @@ void json_value_set_member(JsonValue *self, const char *name,
 
 void json_value_add_element(JsonValue *self, JsonValue *element) {
   assert(self->type == JSON_VALUE_TYPE_ARRAY);
+  assert(element != NULL);
   self->data.array.length++;
   self->data.array.elements = realloc(
       self->data.array.elements, self->data.array.length * sizeof(JsonValue *));
   self->data.array.elements[self->data.array.length - 1] = element;
+}
+
+char *json_value_to_string(JsonValue *self) {
+  switch (self->type) {
+  case JSON_VALUE_TYPE_OBJECT:
+    return object_to_string(self->data.object.length, self->data.object.names,
+                            self->data.object.values);
+  case JSON_VALUE_TYPE_ARRAY:
+    return array_to_string(self->data.array.length, self->data.array.elements);
+  case JSON_VALUE_TYPE_STRING:
+    return string_to_string(self->data.string);
+  case JSON_VALUE_TYPE_NUMBER:
+    return number_to_string(self->data.number);
+  case JSON_VALUE_TYPE_TRUE:
+    return strdup("true");
+  case JSON_VALUE_TYPE_FALSE:
+    return strdup("false");
+  case JSON_VALUE_TYPE_NULL:
+    return strdup("null");
+  default:
+    assert(false);
+  }
 }
 
 void json_value_free(JsonValue *self) {

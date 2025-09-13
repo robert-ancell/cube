@@ -5,9 +5,9 @@
 #include "json_parser.h"
 
 static bool load_project() {
-  JsonParser *parser = json_parser_new("null");
+  JsonParser *parser = json_parser_new("{\"one\": true, \"two\": false}");
   JsonValue *value = json_parser_get_json(parser);
-  printf("%d\n", json_value_get_type(value));
+  printf("%s\n", json_value_to_string(value));
   json_parser_free(parser);
 
   return true;
