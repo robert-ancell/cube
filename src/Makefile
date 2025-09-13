@@ -1,5 +1,7 @@
 BINARY = cube
-SOURCES = main.c
+SOURCES = main.c \
+          json_parser.c \
+          json_value.c
 OBJECTS = $(SOURCES:%.c=.build/%.o)
 CFLAGS = -g -Wall
 

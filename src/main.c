@@ -1,9 +1,28 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-static int do_build() { return 0; }
+#include "json_parser.h"
 
-static int do_clean() { return 0; }
+static bool load_project() {
+  JsonParser *parser = json_parser_new("null");
+  JsonValue *value = json_parser_get_json(parser);
+  printf("%d\n", json_value_get_type(value));
+  json_parser_free(parser);
+
+  return true;
+}
+
+static int do_build() {
+  load_project();
+
+  return 0;
+}
+
+static int do_clean() {
+  load_project();
+  return 0;
+}
 
 static int do_help() {
   fprintf(stderr, "Cube is a tool for building C projects.\n"
