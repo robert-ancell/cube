@@ -47,7 +47,7 @@ static int do_help() {
                   "Usage: cube <command> [<options>...]\n"
                   "\n"
                   "Commands:\n"
-                  " build  Build current project\n"
+                  " build  Build project\n"
                   " test   Run tests\n"
                   " format Reformat code\n"
                   " clean  Delete build artifacts\n"
