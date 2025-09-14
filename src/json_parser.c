@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -275,7 +276,7 @@ static bool parse_fraction(JsonParser *self, uint64_t *fraction_numerator,
 }
 
 static bool parse_exponent(JsonParser *self, int64_t *exponent) {
-  if (!parse_constant(self, "e") || !parse_constant(self, "E")) {
+  if (!parse_constant(self, "e") && !parse_constant(self, "E")) {
     *exponent = 0;
     return true;
   }
@@ -314,7 +315,7 @@ static JsonValue *parse_number(JsonParser *self) {
   }
 
   double fraction = (double)fraction_numerator / (double)fraction_denominator;
-  double number = sign * (integer + fraction);
+  double number = sign * (integer + fraction) * pow(10, exponent);
   return json_value_new_number(number);
 }
 
@@ -362,7 +363,6 @@ static JsonValue *parse_element(JsonParser *self) {
   parse_whitespace(self);
   JsonValue *value = parse_value(self);
   if (value == NULL) {
-    // FIXME: error
     return NULL;
   }
   parse_whitespace(self);

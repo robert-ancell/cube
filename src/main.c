@@ -5,7 +5,12 @@
 #include "json_parser.h"
 
 static bool load_project() {
-  JsonParser *parser = json_parser_new("{\"one\": 1, \"two\": 1.23}");
+  FILE *f = fopen("cube.json", "r");
+  char data[1024];
+  size_t n_read = fread(data, 1, sizeof(data) - 1, f);
+  data[n_read] = '\0';
+  fclose(f);
+  JsonParser *parser = json_parser_new(data);
   JsonValue *value = json_parser_get_json(parser);
   printf("%s\n", json_value_to_string(value));
   json_parser_free(parser);

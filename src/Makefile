@@ -7,7 +7,7 @@ OBJECTS = $(SOURCES:%.c=.build/%.o)
 CFLAGS = -g -Wall
 
 $(BINARY): $(OBJECTS)
-	gcc $^ -o $@
+	gcc $^ -lm -o $@
 
 DEP_SOURCES = $(SOURCES)
 DEPS=$(DEP_SOURCES:%.c=.build/%.d)
