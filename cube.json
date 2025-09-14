@@ -1,0 +1,19 @@
+{
+  "programs": [
+    {
+      "name": "cube",
+      "sources": [ "src/json_parser.c",
+                   "src/json_value.c",
+                   "src/main.c",
+                   "src/utf8.c" ],
+      "defines": { "FOO": "BAR" },
+      "libraries": [ "m" ],
+      "dependencies": [
+        {
+          "url": "https://github.com/robert-ancell/cube.git",
+          "ref": "0.1"
+        }
+      ]
+    }
+  ]
+}
