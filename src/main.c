@@ -78,11 +78,11 @@ static CubeProject *load_project() {
   fclose(f);
   JsonParser *parser = json_parser_new(data);
   if (json_parser_get_error(parser) != JSON_PARSER_ERROR_NONE) {
-    json_parser_free(parser);
+    json_parser_unref(parser);
     return NULL;
   }
   CubeProject *project = decode_project(json_parser_get_json(parser));
-  json_parser_free(parser);
+  json_parser_unref(parser);
 
   return project;
 }

@@ -322,17 +322,17 @@ char *json_value_to_string(JsonValue *self) {
   }
 }
 
-void json_value_free(JsonValue *self) {
+void json_value_unref(JsonValue *self) {
   switch (self->type) {
   case JSON_VALUE_TYPE_OBJECT:
     for (size_t i = 0; i < self->data.object.length; i++) {
       free(self->data.object.names[i]);
-      json_value_free(self->data.object.values[i]);
+      json_value_unref(self->data.object.values[i]);
     }
     break;
   case JSON_VALUE_TYPE_ARRAY:
     for (size_t i = 0; i < self->data.array.length; i++) {
-      json_value_free(self->data.array.elements[i]);
+      json_value_unref(self->data.array.elements[i]);
     }
     break;
   case JSON_VALUE_TYPE_STRING:

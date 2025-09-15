@@ -153,31 +153,31 @@ static JsonValue *parse_object(JsonParser *self) {
     JsonValue *name = parse_string(self);
     if (name == NULL) {
       set_error(self, JSON_PARSER_ERROR_INVALID_MEMBER_NAME);
-      json_value_free(object);
+      json_value_unref(object);
       return NULL;
     }
     parse_whitespace(self);
     if (!parse_constant(self, ":")) {
       set_error(self, JSON_PARSER_ERROR_MISSING_MEMBER_DIVIDER);
-      json_value_free(name);
-      json_value_free(object);
+      json_value_unref(name);
+      json_value_unref(object);
       return NULL;
     }
     JsonValue *value = parse_element(self);
     if (value == NULL) {
       set_error(self, JSON_PARSER_ERROR_INVALID_MEMBER_VALUE);
-      json_value_free(name);
-      json_value_free(object);
+      json_value_unref(name);
+      json_value_unref(object);
       return NULL;
     }
 
     json_value_set_member(object, json_value_get_string(name), value);
-    json_value_free(name);
+    json_value_unref(name);
   } while (parse_constant(self, ","));
 
   if (!parse_constant(self, "}")) {
     set_error(self, JSON_PARSER_ERROR_UNTERMINATED_OBJECT);
-    json_value_free(object);
+    json_value_unref(object);
     return NULL;
   }
 
@@ -200,7 +200,7 @@ static JsonValue *parse_array(JsonParser *self) {
     JsonValue *element = parse_element(self);
     if (element == NULL) {
       set_error(self, JSON_PARSER_ERROR_INVALID_ARRAY_ELEMENT);
-      json_value_free(array);
+      json_value_unref(array);
       return NULL;
     }
 
@@ -209,7 +209,7 @@ static JsonValue *parse_array(JsonParser *self) {
 
   if (!parse_constant(self, "]")) {
     set_error(self, JSON_PARSER_ERROR_UNTERMINATED_ARRAY);
-    json_value_free(array);
+    json_value_unref(array);
     return NULL;
   }
 
@@ -388,9 +388,9 @@ JsonValue *json_parser_get_json(JsonParser *self) {
   return self->json;
 }
 
-void json_parser_free(JsonParser *self) {
+void json_parser_unref(JsonParser *self) {
   if (self->json != NULL) {
-    json_value_free(self->json);
+    json_value_unref(self->json);
   }
   free(self);
 }

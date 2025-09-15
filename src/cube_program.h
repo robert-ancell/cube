@@ -7,4 +7,4 @@ CubeProgram *cube_program_new(const char *name, const char **sources,
 
 const char *cube_program_get_name(CubeProgram *self);
 
-void cube_program_free(CubeProgram *self);
+void cube_program_unref(CubeProgram *self);

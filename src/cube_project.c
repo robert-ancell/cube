@@ -20,7 +20,7 @@ CubeProgram **cube_project_get_programs(CubeProject *self) {
   return self->programs;
 }
 
-void cube_project_free(CubeProject *self) {
+void cube_project_unref(CubeProject *self) {
   free(self->programs);
   free(self);
 }

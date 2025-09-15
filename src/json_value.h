@@ -48,4 +48,4 @@ void json_value_add_element(JsonValue *self, JsonValue *element);
 
 char *json_value_to_string(JsonValue *self);
 
-void json_value_free(JsonValue *self);
+void json_value_unref(JsonValue *self);

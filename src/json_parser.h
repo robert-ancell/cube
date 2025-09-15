@@ -24,4 +24,4 @@ JsonParserError json_parser_get_error(JsonParser *self);
 
 JsonValue *json_parser_get_json(JsonParser *self);
 
-void json_parser_free(JsonParser *self);
+void json_parser_unref(JsonParser *self);

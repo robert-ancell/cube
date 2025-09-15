@@ -25,7 +25,7 @@ CubeProgram *cube_program_new(const char *name, const char **sources,
 
 const char *cube_program_get_name(CubeProgram *self) { return self->name; }
 
-void cube_program_free(CubeProgram *self) {
+void cube_program_unref(CubeProgram *self) {
   free(self->name);
   for (size_t i = 0; i < self->sources_length; i++) {
     free(self->sources[i]);
