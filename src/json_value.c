@@ -8,6 +8,7 @@
 #include "utf8.h"
 
 struct _JsonValue {
+  int ref;
   JsonValueType type;
   union {
     struct {
@@ -179,6 +180,7 @@ static char *number_to_string(double number) {
 static JsonValue *json_value_new(JsonValueType type) {
   JsonValue *self = malloc(sizeof(JsonValue));
 
+  self->ref = 1;
   self->type = type;
   switch (type) {
   case JSON_VALUE_TYPE_OBJECT:
@@ -241,6 +243,11 @@ JsonValue *json_value_new_false() {
 
 JsonValue *json_value_new_null() {
   return json_value_new(JSON_VALUE_TYPE_NULL);
+}
+
+JsonValue *json_value_ref(JsonValue *self) {
+  self->ref++;
+  return self;
 }
 
 JsonValueType json_value_get_type(JsonValue *self) { return self->type; }
@@ -323,6 +330,10 @@ char *json_value_to_string(JsonValue *self) {
 }
 
 void json_value_unref(JsonValue *self) {
+  if (--self->ref != 0) {
+    return;
+  }
+
   switch (self->type) {
   case JSON_VALUE_TYPE_OBJECT:
     for (size_t i = 0; i < self->data.object.length; i++) {

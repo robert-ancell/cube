@@ -28,6 +28,8 @@ JsonValue *json_value_new_false();
 
 JsonValue *json_value_new_null();
 
+JsonValue *json_value_ref(JsonValue *self);
+
 JsonValueType json_value_get_type(JsonValue *self);
 
 JsonValue *json_value_get_member(JsonValue *self, const char *name);

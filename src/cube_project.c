@@ -28,8 +28,10 @@ CubeProgram **cube_project_get_programs(CubeProject *self) {
 }
 
 void cube_project_unref(CubeProject *self) {
-  if (--self->ref == 0) {
-    free(self->programs);
-    free(self);
+  if (--self->ref != 0) {
+    return;
   }
+
+  free(self->programs);
+  free(self);
 }
