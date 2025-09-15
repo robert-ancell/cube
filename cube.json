@@ -1,4 +1,7 @@
 {
+  "cubes": [
+  ],
+
   "programs": [
     {
       "name": "cube",

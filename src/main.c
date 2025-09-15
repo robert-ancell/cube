@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cube_project.h"
 #include "json_parser.h"
 
 static const char *get_string_member(JsonValue *object, const char *name) {
@@ -36,21 +37,23 @@ static const char **get_string_array_member(JsonValue *object, const char *name,
   return array;
 }
 
-static bool decode_project(JsonValue *project) {
+static CubeProject *decode_project(JsonValue *project) {
   if (json_value_get_type(project) != JSON_VALUE_TYPE_OBJECT) {
-    return false;
+    return NULL;
   }
 
-  JsonValue *programs = json_value_get_member(project, "programs");
-  if (json_value_get_type(programs) != JSON_VALUE_TYPE_ARRAY) {
-    return false;
+  JsonValue *program_array = json_value_get_member(project, "programs");
+  if (json_value_get_type(program_array) != JSON_VALUE_TYPE_ARRAY) {
+    return NULL;
   }
 
-  size_t programs_length = json_value_get_length(programs);
+  size_t programs_length = json_value_get_length(program_array);
+  CubeProgram **programs = malloc(sizeof(CubeProgram *) * programs_length);
   for (size_t i = 0; i < programs_length; i++) {
-    JsonValue *program = json_value_get_element(programs, i);
+    JsonValue *program = json_value_get_element(program_array, i);
     if (json_value_get_type(program) != JSON_VALUE_TYPE_OBJECT) {
-      return false;
+      // FIXME: free programs
+      return NULL;
     }
 
     const char *name = get_string_member(program, "name");
@@ -58,19 +61,16 @@ static bool decode_project(JsonValue *project) {
     const char **sources =
         get_string_array_member(program, "sources", &sources_length);
 
-    printf("%s:\n", name);
-    for (size_t j = 0; j < sources_length; j++) {
-      printf(" - %s\n", sources[j]);
-    }
+    programs[i] = cube_program_new(name, sources, sources_length);
   }
 
-  return true;
+  return cube_project_new(programs, programs_length);
 }
 
-static bool load_project() {
+static CubeProject *load_project() {
   FILE *f = fopen("cube.json", "r");
   if (f == NULL) {
-    return false;
+    return NULL;
   }
   char data[1024];
   size_t n_read = fread(data, 1, sizeof(data) - 1, f);
@@ -79,12 +79,12 @@ static bool load_project() {
   JsonParser *parser = json_parser_new(data);
   if (json_parser_get_error(parser) != JSON_PARSER_ERROR_NONE) {
     json_parser_free(parser);
-    return false;
+    return NULL;
   }
-  bool result = decode_project(json_parser_get_json(parser));
+  CubeProject *project = decode_project(json_parser_get_json(parser));
   json_parser_free(parser);
 
-  return result;
+  return project;
 }
 
 static int do_create() {
