@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 typedef struct _JsonValue JsonValue;
 
 typedef enum {
@@ -32,7 +34,35 @@ JsonValue *json_value_ref(JsonValue *self);
 
 JsonValueType json_value_get_type(JsonValue *self);
 
+/// Gets an member with [name] from this object.
+/// Returns `NULL` if this member is not present.
 JsonValue *json_value_get_member(JsonValue *self, const char *name);
+
+/// Gets an object member with [name] from this object.
+/// Returns `NULL` if this member is not present or is not an object.
+JsonValue *json_value_get_object_member(JsonValue *self, const char *name);
+
+/// Gets an array member with [name] from this object.
+/// Returns `NULL` if this member is not present or is not an array.
+JsonValue *json_value_get_array_member(JsonValue *self, const char *name);
+
+/// Gets an string member with [name] from this object.
+/// Returns [default_value] if the member is not present.
+/// Returns `NULL` if this member is not a string.
+const char *json_value_get_string_member(JsonValue *self, const char *name,
+                                         const char *default_value);
+
+/// Gets an number member with [name] from this object.
+/// Returns [default_value] if the member is not present.
+/// Returns `0.0` if this member is not a number.
+double json_value_get_number_member(JsonValue *self, const char *name,
+                                    double default_value);
+
+/// Gets an boolean member with [name] from this object.
+/// Returns [default_value] if the member is not present.
+/// Returns `false` if this member is not `true` or `false`.
+bool json_value_get_boolean_member(JsonValue *self, const char *name,
+                                   bool default_value);
 
 size_t json_value_get_length(JsonValue *self);
 

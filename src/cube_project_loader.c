@@ -9,15 +9,6 @@ struct _CubeProjectLoader {
   CubeProject *project;
 };
 
-static const char *get_string_member(JsonValue *object, const char *name) {
-  JsonValue *member = json_value_get_member(object, name);
-  if (member == NULL || json_value_get_type(member) != JSON_VALUE_TYPE_STRING) {
-    return NULL;
-  }
-
-  return json_value_get_string(member);
-}
-
 static const char **get_string_array_member(JsonValue *object, const char *name,
                                             size_t *length) {
   JsonValue *member = json_value_get_member(object, name);
@@ -59,7 +50,7 @@ static CubeProject *decode_project(JsonValue *project) {
       return NULL;
     }
 
-    const char *name = get_string_member(program, "name");
+    const char *name = json_value_get_string_member(program, "name", "");
     size_t sources_length;
     const char **sources =
         get_string_array_member(program, "sources", &sources_length);

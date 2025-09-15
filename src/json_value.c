@@ -263,6 +263,77 @@ JsonValue *json_value_get_member(JsonValue *self, const char *name) {
   return NULL;
 }
 
+JsonValue *json_value_get_object_member(JsonValue *self, const char *name) {
+  JsonValue *value = json_value_get_member(self, name);
+  if (value == NULL) {
+    return NULL;
+  }
+
+  if (json_value_get_type(value) != JSON_VALUE_TYPE_OBJECT) {
+    return NULL;
+  }
+
+  return value;
+}
+
+JsonValue *json_value_get_array_member(JsonValue *self, const char *name) {
+  JsonValue *value = json_value_get_member(self, name);
+  if (value == NULL) {
+    return NULL;
+  }
+
+  if (json_value_get_type(value) != JSON_VALUE_TYPE_ARRAY) {
+    return NULL;
+  }
+
+  return value;
+}
+
+const char *json_value_get_string_member(JsonValue *self, const char *name,
+                                         const char *default_value) {
+  JsonValue *value = json_value_get_member(self, name);
+  if (value == NULL) {
+    return default_value;
+  }
+
+  if (json_value_get_type(value) != JSON_VALUE_TYPE_STRING) {
+    return NULL;
+  }
+
+  return json_value_get_string(value);
+}
+
+double json_value_get_number_member(JsonValue *self, const char *name,
+                                    double default_value) {
+  JsonValue *value = json_value_get_member(self, name);
+  if (value == NULL) {
+    return default_value;
+  }
+
+  if (json_value_get_type(value) != JSON_VALUE_TYPE_NUMBER) {
+    return 0.0;
+  }
+
+  return json_value_get_number(value);
+}
+
+bool json_value_get_boolean_member(JsonValue *self, const char *name,
+                                   bool default_value) {
+  JsonValue *value = json_value_get_member(self, name);
+  if (value == NULL) {
+    return default_value;
+  }
+
+  switch (json_value_get_type(value)) {
+  case JSON_VALUE_TYPE_TRUE:
+    return true;
+  case JSON_VALUE_TYPE_FALSE:
+    return false;
+  default:
+    return false;
+  }
+}
+
 size_t json_value_get_length(JsonValue *self) {
   assert(self->type == JSON_VALUE_TYPE_ARRAY);
   return self->data.array.length;
