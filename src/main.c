@@ -87,6 +87,12 @@ static bool load_project() {
   return result;
 }
 
+static int do_create() {
+  load_project();
+
+  return 0;
+}
+
 static int do_build() {
   load_project();
 
@@ -117,11 +123,12 @@ static int do_help(int argc, char **argv) {
           "Usage: cube <command> [<options>...]\n"
           "\n"
           "Commands:\n"
-          " build  Build project\n"
-          " test   Run tests\n"
-          " format Reformat code\n"
-          " clean  Delete build artifacts\n"
-          " help   Show command help\n"
+          " create  Create project\n"
+          " build   Build project\n"
+          " test    Run tests\n"
+          " format  Reformat code\n"
+          " clean   Delete build artifacts\n"
+          " help    Show command help\n"
           "\n"
           "For more information on a command, run 'cube help <command>'\n");
   return 0;
@@ -132,7 +139,9 @@ int main(int argc, char **argv) {
   int command_argc = argc - 2;
   char **command_argv = argv + 2;
 
-  if (strcmp(command, "build") == 0) {
+  if (strcmp(command, "create") == 0) {
+    return do_create();
+  } else if (strcmp(command, "build") == 0) {
     return do_build();
   } else if (strcmp(command, "test") == 0) {
     return do_test();
