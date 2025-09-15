@@ -1,6 +1,7 @@
 BINARY = cube
 SOURCES = cube_program.c \
           cube_project.c \
+          cube_project_loader.c \
           main.c \
           json_parser.c \
           json_value.c \

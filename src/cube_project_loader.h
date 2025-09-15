@@ -1,0 +1,15 @@
+#pragma once
+
+typedef struct _CubeProjectLoader CubeProjectLoader;
+
+typedef enum { CUBE_PROJECT_LOADER_ERROR_NONE } CubeProjectLoaderError;
+
+#include "cube_project.h"
+
+CubeProjectLoader *cube_project_loader_new();
+
+CubeProjectLoaderError cube_project_loader_get_error(CubeProjectLoader *self);
+
+CubeProject *cube_project_loader_get_project(CubeProjectLoader *self);
+
+void cube_project_loader_unref(CubeProjectLoader *self);
