@@ -82,11 +82,12 @@ void cube_command_runner_run(CubeCommandRunner *self) {
     for (size_t i = 0; i < self->commands_length; i++) {
       CubeCommand *command = self->commands[i];
 
-      // Already running
+      // Already running.
       if (self->command_status[i].pid != -1) {
         continue;
       }
 
+      // Awaiting other commands.
       if (!can_run(self, command)) {
         continue;
       }

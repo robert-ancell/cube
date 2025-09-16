@@ -64,10 +64,13 @@ static int do_build() {
 
       StringArray *args = string_array_new();
       string_array_append(args, "echo");
-      string_array_append(args, "compile");
+      string_array_append(args, "gcc");
+      string_array_append(args, "-g");
+      string_array_append(args, "-Wall");
+      string_array_append(args, "-c");
+      string_array_append(args, source);
       string_array_append(args, "-o");
       string_array_append_take(args, get_compile_output(source));
-      string_array_append(args, source);
 
       StringArray *outputs = string_array_new();
       string_array_append_take(outputs, get_compile_output(source));
@@ -87,13 +90,13 @@ static int do_build() {
 
     StringArray *args = string_array_new();
     string_array_append(args, "echo");
-    string_array_append(args, "link");
-    string_array_append(args, "-o");
-    string_array_append(args, cube_program_get_name(programs[i]));
+    string_array_append(args, "gcc");
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
       string_array_append_take(args, get_compile_output(source));
     }
+    string_array_append(args, "-o");
+    string_array_append(args, cube_program_get_name(programs[i]));
 
     StringArray *outputs = string_array_new();
     string_array_append(outputs, cube_program_get_name(programs[i]));
