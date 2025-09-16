@@ -112,6 +112,10 @@ static int do_build() {
   cube_command_runner_unref(runner);
 
   cube_project_unref(project);
+  for (size_t i = 0; i < commands_length; i++) {
+    cube_command_unref(commands[i]);
+  }
+  free(commands);
 
   return 1;
 }
