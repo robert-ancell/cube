@@ -39,7 +39,13 @@ static CubeProject *decode_project(JsonValue *project) {
     string_array_unref(sources);
   }
 
-  return cube_project_new(programs, programs_length);
+  CubeProject *p = cube_project_new(programs, programs_length);
+  for (size_t i = 0; i < programs_length; i++) {
+    cube_program_unref(programs[i]);
+  }
+  free(programs);
+
+  return p;
 }
 
 static void load_project(CubeProjectLoader *self) {
