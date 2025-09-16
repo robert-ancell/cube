@@ -245,11 +245,6 @@ JsonValue *json_value_new_null() {
   return json_value_new(JSON_VALUE_TYPE_NULL);
 }
 
-JsonValue *json_value_ref(JsonValue *self) {
-  self->ref++;
-  return self;
-}
-
 JsonValueType json_value_get_type(JsonValue *self) { return self->type; }
 
 JsonValue *json_value_get_member(JsonValue *self, const char *name) {
@@ -398,6 +393,11 @@ char *json_value_to_string(JsonValue *self) {
   default:
     assert(false);
   }
+}
+
+JsonValue *json_value_ref(JsonValue *self) {
+  self->ref++;
+  return self;
 }
 
 void json_value_unref(JsonValue *self) {

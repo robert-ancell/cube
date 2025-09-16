@@ -1,5 +1,7 @@
 BINARY = cube
-SOURCES = cube_program.c \
+SOURCES = cube_command.c \
+          cube_command_runner.c \
+          cube_program.c \
           cube_project.c \
           cube_project_loader.c \
           main.c \

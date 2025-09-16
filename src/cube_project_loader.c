@@ -9,6 +9,7 @@ struct _CubeProjectLoader {
   CubeProject *project;
 };
 
+// FIXME: Move into JsonValue
 static const char **get_string_array_member(JsonValue *object, const char *name,
                                             size_t *length) {
   JsonValue *member = json_value_get_member(object, name);

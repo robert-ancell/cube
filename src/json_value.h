@@ -30,8 +30,6 @@ JsonValue *json_value_new_false();
 
 JsonValue *json_value_new_null();
 
-JsonValue *json_value_ref(JsonValue *self);
-
 JsonValueType json_value_get_type(JsonValue *self);
 
 /// Gets an member with [name] from this object.
@@ -79,5 +77,7 @@ void json_value_set_member(JsonValue *self, const char *name, JsonValue *value);
 void json_value_add_element(JsonValue *self, JsonValue *element);
 
 char *json_value_to_string(JsonValue *self);
+
+JsonValue *json_value_ref(JsonValue *self);
 
 void json_value_unref(JsonValue *self);

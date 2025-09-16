@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cube_command_runner.h"
 #include "cube_project_loader.h"
 
 static CubeProject *load_project() {
@@ -18,41 +19,88 @@ static CubeProject *load_project() {
 }
 
 static int do_create() {
-  load_project();
+  CubeProject *project = load_project();
 
   printf("FIXME\n");
+
+  cube_project_unref(project);
 
   return 1;
 }
 
-static int do_build() {
-  load_project();
+static size_t string_array_length(const char **array) {
+  size_t length = 0;
+  while (array[length] != NULL) {
+    length++;
+  }
+  return length;
+}
 
-  printf("FIXME\n");
+static CubeCommand **add_command(CubeCommand **commands,
+                                 size_t *commands_length, const char **args) {
+  (*commands_length)++;
+  commands = realloc(commands, sizeof(CubeCommand *) * *commands_length);
+  commands[*commands_length - 1] =
+      cube_command_new(NULL, 0, args, string_array_length(args), NULL, 0);
+
+  return commands;
+}
+
+static int do_build() {
+  CubeProject *project = load_project();
+
+  size_t programs_length;
+  CubeProgram **programs = cube_project_get_programs(project, &programs_length);
+  CubeCommand **commands = NULL;
+  size_t commands_length = 0;
+  for (size_t i = 0; i < programs_length; i++) {
+    size_t sources_length;
+    char **sources = cube_program_get_sources(programs[i], &sources_length);
+    for (size_t j = 0; j < sources_length; j++) {
+      const char *args[] = {"echo", "compile", sources[j], NULL};
+      commands = add_command(commands, &commands_length, args);
+    }
+    const char *args[] = {"echo", "link", cube_program_get_name(programs[i]),
+                          NULL};
+    commands = add_command(commands, &commands_length, args);
+  }
+
+  CubeCommandRunner *runner =
+      cube_command_runner_new(commands, commands_length);
+  cube_command_runner_run(runner);
+  cube_command_runner_unref(runner);
+
+  cube_project_unref(project);
 
   return 1;
 }
 
 static int do_test() {
-  load_project();
+  CubeProject *project = load_project();
 
   printf("FIXME\n");
+
+  cube_project_unref(project);
 
   return 1;
 }
 
 static int do_format() {
-  load_project();
+  CubeProject *project = load_project();
 
   printf("FIXME\n");
+
+  cube_project_unref(project);
 
   return 1;
 }
 
 static int do_clean() {
-  load_project();
+  CubeProject *project = load_project();
 
   printf("FIXME\n");
+
+  cube_project_unref(project);
 
   return 1;
 }
