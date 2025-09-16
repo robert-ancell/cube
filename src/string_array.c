@@ -20,9 +20,13 @@ StringArray *string_array_new() {
 }
 
 void string_array_append(StringArray *self, const char *string) {
+  string_array_append_take(self, strdup(string));
+}
+
+void string_array_append_take(StringArray *self, char *string) {
   self->strings_length++;
   self->strings = realloc(self->strings, sizeof(char *) * self->strings_length);
-  self->strings[self->strings_length - 1] = strdup(string);
+  self->strings[self->strings_length - 1] = string;
 }
 
 size_t string_array_get_length(StringArray *self) {

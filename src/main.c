@@ -37,6 +37,16 @@ static CubeCommand **add_command_take(CubeCommand **commands,
   return commands;
 }
 
+static char *get_compile_output(const char *input) {
+  size_t input_length = strlen(input);
+  if (input_length < 2) {
+    return NULL;
+  }
+  char *output = strdup(input);
+  output[input_length - 1] = 'o';
+  return output;
+}
+
 static int do_build() {
   CubeProject *project = load_project();
 
@@ -51,11 +61,16 @@ static int do_build() {
       const char *source = string_array_get_element(sources, j);
       StringArray *inputs = string_array_new();
       string_array_append(inputs, source);
+
       StringArray *args = string_array_new();
       string_array_append(args, "echo");
       string_array_append(args, "compile");
+      string_array_append(args, "-o");
+      string_array_append_take(args, get_compile_output(source));
       string_array_append(args, source);
+
       StringArray *outputs = string_array_new();
+      string_array_append_take(outputs, get_compile_output(source));
 
       commands = add_command_take(commands, &commands_length,
                                   cube_command_new(inputs, args, outputs));
@@ -65,11 +80,23 @@ static int do_build() {
       string_array_unref(outputs);
     }
     StringArray *inputs = string_array_new();
+    for (size_t j = 0; j < sources_length; j++) {
+      const char *source = string_array_get_element(sources, j);
+      string_array_append_take(inputs, get_compile_output(source));
+    }
+
     StringArray *args = string_array_new();
     string_array_append(args, "echo");
     string_array_append(args, "link");
+    string_array_append(args, "-o");
     string_array_append(args, cube_program_get_name(programs[i]));
+    for (size_t j = 0; j < sources_length; j++) {
+      const char *source = string_array_get_element(sources, j);
+      string_array_append_take(args, get_compile_output(source));
+    }
+
     StringArray *outputs = string_array_new();
+    string_array_append(outputs, cube_program_get_name(programs[i]));
 
     commands = add_command_take(commands, &commands_length,
                                 cube_command_new(sources, args, outputs));
