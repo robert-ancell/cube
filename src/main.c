@@ -20,30 +20,41 @@ static CubeProject *load_project() {
 static int do_create() {
   load_project();
 
-  return 0;
+  printf("FIXME\n");
+
+  return 1;
 }
 
 static int do_build() {
   load_project();
 
-  return 0;
+  printf("FIXME\n");
+
+  return 1;
 }
 
 static int do_test() {
   load_project();
 
-  return 0;
+  printf("FIXME\n");
+
+  return 1;
 }
 
 static int do_format() {
   load_project();
 
-  return 0;
+  printf("FIXME\n");
+
+  return 1;
 }
 
 static int do_clean() {
   load_project();
-  return 0;
+
+  printf("FIXME\n");
+
+  return 1;
 }
 
 static int do_help(int argc, char **argv) {
