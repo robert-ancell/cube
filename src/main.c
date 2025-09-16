@@ -102,7 +102,7 @@ static int do_build() {
     string_array_append(outputs, cube_program_get_name(programs[i]));
 
     commands = add_command_take(commands, &commands_length,
-                                cube_command_new(sources, args, outputs));
+                                cube_command_new(inputs, args, outputs));
 
     string_array_unref(inputs);
     string_array_unref(args);
