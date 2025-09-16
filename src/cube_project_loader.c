@@ -34,8 +34,13 @@ static CubeProject *decode_project(JsonValue *project) {
     if (sources == NULL) {
       sources = string_array_new();
     }
+    StringArray *libraries =
+        json_value_get_string_array_member(program, "libraries");
+    if (libraries == NULL) {
+      libraries = string_array_new();
+    }
 
-    programs[i] = cube_program_new(name, sources);
+    programs[i] = cube_program_new(name, sources, libraries);
     string_array_unref(sources);
   }
 

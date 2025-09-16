@@ -5,10 +5,18 @@
   "programs": [
     {
       "name": "cube",
-      "sources": [ "src/json_parser.c",
-                   "src/json_value.c",
-                   "src/main.c",
-                   "src/utf8.c" ],
+      "sources": [
+        "src/cube_command.c",
+        "src/cube_command_runner.c",
+        "src/cube_program.c",
+        "src/cube_project.c",
+        "src/cube_project_loader.c",
+        "src/json_parser.c",
+        "src/json_value.c",
+        "src/main.c",
+        "src/string_array.c",
+        "src/utf8.c"
+      ],
       "defines": { "FOO": "BAR" },
       "libraries": [ "m" ],
       "dependencies": [
