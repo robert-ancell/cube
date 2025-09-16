@@ -2,7 +2,7 @@
 
 typedef struct _CubeProgram CubeProgram;
 
-CubeProgram *cube_program_new(const char *name, const char **sources,
+CubeProgram *cube_program_new(const char *name, char **sources,
                               size_t sources_length);
 
 const char *cube_program_get_name(CubeProgram *self);

@@ -26,6 +26,15 @@ static bool is_complete(CubeCommandRunner *self) {
   return true;
 }
 
+static bool have_input(CubeCommandRunner *self) {
+  for (size_t i = 0; i < self->commands_length; i++) {
+    // FIXMEchar **outputs= cube_command_get_outputs(self->commands[i]);
+    // return false;
+  }
+
+  return true;
+}
+
 CubeCommandRunner *cube_command_runner_new(CubeCommand **commands,
                                            size_t commands_length) {
   CubeCommandRunner *self = malloc(sizeof(CubeCommandRunner));

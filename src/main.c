@@ -28,7 +28,7 @@ static int do_create() {
   return 1;
 }
 
-static size_t string_array_length(const char **array) {
+static size_t string_array_length(char **array) {
   size_t length = 0;
   while (array[length] != NULL) {
     length++;
@@ -36,13 +36,12 @@ static size_t string_array_length(const char **array) {
   return length;
 }
 
-static CubeCommand **add_command(CubeCommand **commands,
-                                 size_t *commands_length, const char **args) {
+static CubeCommand **add_command_take(CubeCommand **commands,
+                                      size_t *commands_length,
+                                      CubeCommand *command) {
   (*commands_length)++;
   commands = realloc(commands, sizeof(CubeCommand *) * *commands_length);
-  commands[*commands_length - 1] =
-      cube_command_new(NULL, 0, args, string_array_length(args), NULL, 0);
-
+  commands[*commands_length - 1] = command;
   return commands;
 }
 
@@ -57,12 +56,19 @@ static int do_build() {
     size_t sources_length;
     char **sources = cube_program_get_sources(programs[i], &sources_length);
     for (size_t j = 0; j < sources_length; j++) {
-      const char *args[] = {"echo", "compile", sources[j], NULL};
-      commands = add_command(commands, &commands_length, args);
+      char *inputs[] = {sources[j], NULL};
+      char *args[] = {"echo", "compile", sources[j], NULL};
+      commands = add_command_take(
+          commands, &commands_length,
+          cube_command_new(inputs, string_array_length(inputs), args,
+                           string_array_length(args), NULL, 0));
     }
-    const char *args[] = {"echo", "link", cube_program_get_name(programs[i]),
-                          NULL};
-    commands = add_command(commands, &commands_length, args);
+    char *args[] = {"echo", "link", (char *)cube_program_get_name(programs[i]),
+                    NULL};
+    commands = add_command_take(
+        commands, &commands_length,
+        cube_command_new(sources, string_array_length(sources), args,
+                         string_array_length(args), NULL, 0));
   }
 
   CubeCommandRunner *runner =

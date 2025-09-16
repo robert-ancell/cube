@@ -10,15 +10,15 @@ struct _CubeProjectLoader {
 };
 
 // FIXME: Move into JsonValue
-static const char **get_string_array_member(JsonValue *object, const char *name,
-                                            size_t *length) {
+static char **get_string_array_member(JsonValue *object, const char *name,
+                                      size_t *length) {
   JsonValue *member = json_value_get_member(object, name);
   if (member == NULL || json_value_get_type(member) != JSON_VALUE_TYPE_ARRAY) {
     return NULL;
   }
 
   size_t member_length = json_value_get_length(member);
-  const char **array = malloc(sizeof(char *) * member_length);
+  char **array = malloc(sizeof(char *) * member_length);
   for (size_t i = 0; i < member_length; i++) {
     JsonValue *element = json_value_get_element(member, i);
     if (json_value_get_type(element) != JSON_VALUE_TYPE_STRING) {
@@ -53,7 +53,7 @@ static CubeProject *decode_project(JsonValue *project) {
 
     const char *name = json_value_get_string_member(program, "name", "");
     size_t sources_length;
-    const char **sources =
+    char **sources =
         get_string_array_member(program, "sources", &sources_length);
 
     programs[i] = cube_program_new(name, sources, sources_length);
