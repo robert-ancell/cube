@@ -2,12 +2,13 @@
 
 typedef struct _CubeProgram CubeProgram;
 
-CubeProgram *cube_program_new(const char *name, char **sources,
-                              size_t sources_length);
+#include "string_array.h"
+
+CubeProgram *cube_program_new(const char *name, StringArray *sources);
 
 const char *cube_program_get_name(CubeProgram *self);
 
-char **cube_program_get_sources(CubeProgram *self, size_t *sources_length);
+StringArray *cube_program_get_sources(CubeProgram *self);
 
 CubeProgram *cube_program_ref(CubeProgram *self);
 

@@ -5,41 +5,30 @@
 
 struct _CubeCommand {
   int ref;
-  char **inputs;
-  size_t inputs_length;
-  char **args;
-  char **outputs;
-  size_t outputs_length;
+  StringArray *inputs;
+  StringArray *args;
+  StringArray *outputs;
 };
 
-CubeCommand *cube_command_new(char **inputs, size_t inputs_length, char **args,
-                              size_t args_length, char **outputs,
-                              size_t outputs_length) {
+CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
+                              StringArray *outputs) {
   CubeCommand *self = malloc(sizeof(CubeCommand));
 
   self->ref = 1;
-  self->inputs = malloc(sizeof(char *) * inputs_length);
-  for (size_t i = 0; i < inputs_length; i++) {
-    self->inputs[i] = strdup(inputs[i]);
-  }
-  self->args = malloc(sizeof(char *) * (args_length + 1));
-  for (size_t i = 0; i < args_length; i++) {
-    self->args[i] = strdup(args[i]);
-  }
-  self->args[args_length] = NULL;
-  self->outputs = malloc(sizeof(char *) * outputs_length);
-  for (size_t i = 0; i < outputs_length; i++) {
-    self->outputs[i] = strdup(outputs[i]);
-  }
+  self->inputs = string_array_ref(inputs);
+  self->args = string_array_ref(args);
+  self->outputs = string_array_ref(outputs);
 
   return self;
 }
 
-char **cube_command_get_inputs(CubeCommand *self) { return self->inputs; }
+StringArray *cube_command_get_inputs(CubeCommand *self) { return self->inputs; }
 
-char **cube_command_get_args(CubeCommand *self) { return self->args; }
+StringArray *cube_command_get_args(CubeCommand *self) { return self->args; }
 
-char **cube_command_get_outputs(CubeCommand *self) { return self->outputs; }
+StringArray *cube_command_get_outputs(CubeCommand *self) {
+  return self->outputs;
+}
 
 CubeCommand *cube_command_ref(CubeCommand *self) {
   self->ref++;
@@ -51,17 +40,8 @@ void cube_command_unref(CubeCommand *self) {
     return;
   }
 
-  for (size_t i = 0; i < self->inputs_length; i++) {
-    free(self->inputs[i]);
-  }
-  free(self->inputs);
-  for (size_t i = 0; self->args[i] != NULL; i++) {
-    free(self->args[i]);
-  }
-  for (size_t i = 0; i < self->outputs_length; i++) {
-    free(self->outputs[i]);
-  }
-  free(self->outputs);
-  free(self->args);
+  string_array_unref(self->inputs);
+  string_array_unref(self->args);
+  string_array_unref(self->outputs);
   free(self);
 }

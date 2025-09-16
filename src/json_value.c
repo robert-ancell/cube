@@ -284,6 +284,28 @@ JsonValue *json_value_get_array_member(JsonValue *self, const char *name) {
   return value;
 }
 
+StringArray *json_value_get_string_array_member(JsonValue *self,
+                                                const char *name) {
+  JsonValue *array = json_value_get_array_member(self, name);
+  if (array == NULL) {
+    return NULL;
+  }
+  size_t array_length = json_value_get_length(array);
+
+  StringArray *string_array = string_array_new();
+  for (size_t i = 0; i < array_length; i++) {
+    JsonValue *element = json_value_get_element(array, i);
+    if (json_value_get_type(element) != JSON_VALUE_TYPE_STRING) {
+      string_array_unref(string_array);
+      return NULL;
+    }
+
+    string_array_append(string_array, json_value_get_string(element));
+  }
+
+  return string_array;
+}
+
 const char *json_value_get_string_member(JsonValue *self, const char *name,
                                          const char *default_value) {
   JsonValue *value = json_value_get_member(self, name);

@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "string_array.h"
+
 typedef struct _JsonValue JsonValue;
 
 typedef enum {
@@ -43,6 +45,11 @@ JsonValue *json_value_get_object_member(JsonValue *self, const char *name);
 /// Gets an array member with [name] from this object.
 /// Returns `NULL` if this member is not present or is not an array.
 JsonValue *json_value_get_array_member(JsonValue *self, const char *name);
+
+/// Gets an string array member with [name] from this object.
+/// Returns `NULL` if this member is not present or is not a string array.
+StringArray *json_value_get_string_array_member(JsonValue *self,
+                                                const char *name);
 
 /// Gets an string member with [name] from this object.
 /// Returns [default_value] if the member is not present.

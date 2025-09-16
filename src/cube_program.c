@@ -6,29 +6,22 @@
 struct _CubeProgram {
   int ref;
   char *name;
-  char **sources;
-  size_t sources_length;
+  StringArray *sources;
 };
 
-CubeProgram *cube_program_new(const char *name, char **sources,
-                              size_t sources_length) {
+CubeProgram *cube_program_new(const char *name, StringArray *sources) {
   CubeProgram *self = malloc(sizeof(CubeProgram));
 
   self->ref = 1;
   self->name = strdup(name);
-  self->sources = malloc(sizeof(char *) * sources_length);
-  for (size_t i = 0; i < sources_length; i++) {
-    self->sources[i] = strdup(sources[i]);
-  }
-  self->sources_length = sources_length;
+  self->sources = string_array_ref(sources);
 
   return self;
 }
 
 const char *cube_program_get_name(CubeProgram *self) { return self->name; }
 
-char **cube_program_get_sources(CubeProgram *self, size_t *sources_length) {
-  *sources_length = self->sources_length;
+StringArray *cube_program_get_sources(CubeProgram *self) {
   return self->sources;
 }
 
@@ -43,9 +36,6 @@ void cube_program_unref(CubeProgram *self) {
   }
 
   free(self->name);
-  for (size_t i = 0; i < self->sources_length; i++) {
-    free(self->sources[i]);
-  }
-  free(self->sources);
+  string_array_unref(self->sources);
   free(self);
 }

@@ -2,18 +2,16 @@
 
 typedef struct _CubeCommand CubeCommand;
 
-#include <stdbool.h>
-#include <unistd.h>
+#include "string_array.h"
 
-CubeCommand *cube_command_new(char **inputs, size_t inputs_length, char **args,
-                              size_t args_length, char **outputs,
-                              size_t outputs_length);
+CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
+                              StringArray *outputs);
 
-char **cube_command_get_inputs(CubeCommand *self);
+StringArray *cube_command_get_inputs(CubeCommand *self);
 
-char **cube_command_get_args(CubeCommand *self);
+StringArray *cube_command_get_args(CubeCommand *self);
 
-char **cube_command_get_outputs(CubeCommand *self);
+StringArray *cube_command_get_outputs(CubeCommand *self);
 
 CubeCommand *cube_command_ref(CubeCommand *self);
 

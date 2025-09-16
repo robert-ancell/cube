@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -26,10 +28,31 @@ static bool is_complete(CubeCommandRunner *self) {
   return true;
 }
 
-static bool have_input(CubeCommandRunner *self) {
+static bool have_input(CubeCommandRunner *self, const char *input) {
   for (size_t i = 0; i < self->commands_length; i++) {
-    // FIXMEchar **outputs= cube_command_get_outputs(self->commands[i]);
-    // return false;
+    StringArray *outputs = cube_command_get_outputs(self->commands[i]);
+    size_t outputs_length = string_array_get_length(outputs);
+
+    for (size_t j = 0; j < outputs_length; j++) {
+      if (strcmp(string_array_get_element(outputs, j), input) == 0) {
+        if (!self->command_status[i].is_complete) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+static bool can_run(CubeCommandRunner *self, CubeCommand *command) {
+  StringArray *inputs = cube_command_get_inputs(command);
+  size_t inputs_length = string_array_get_length(inputs);
+  for (size_t i = 0; i < inputs_length; i++) {
+    const char *input = string_array_get_element(inputs, i);
+    if (!have_input(self, input)) {
+      return false;
+    }
   }
 
   return true;
@@ -57,17 +80,36 @@ void cube_command_runner_run(CubeCommandRunner *self) {
   while (!is_complete(self)) {
     // Run any commands that are ready.
     for (size_t i = 0; i < self->commands_length; i++) {
-      if (self->command_status[i].pid == -1) {
-        char **args = cube_command_get_args(self->commands[i]);
+      CubeCommand *command = self->commands[i];
 
-        pid_t pid = fork();
-        // FIXME: pid == -1
-        if (pid == 0) {
-          execvp(args[0], args);
-          exit(0);
-        }
-        self->command_status[i].pid = pid;
+      // Already running
+      if (self->command_status[i].pid != -1) {
+        continue;
       }
+
+      if (!can_run(self, command)) {
+        continue;
+      }
+
+      StringArray *args = cube_command_get_args(command);
+      size_t args_length = string_array_get_length(args);
+      char **argv = malloc(sizeof(char *) * (args_length + 1));
+      for (size_t j = 0; j < args_length; j++) {
+        argv[j] = strdup(string_array_get_element(args, j));
+      }
+      argv[args_length] = NULL;
+
+      pid_t pid = fork();
+      // FIXME: pid == -1
+      if (pid == 0) {
+        execvp(argv[0], argv);
+        exit(0);
+      }
+      self->command_status[i].pid = pid;
+      for (size_t j = 0; j < args_length; j++) {
+        free(argv[j]);
+      }
+      free(argv);
     }
 
     // Wait for the next command to complete.

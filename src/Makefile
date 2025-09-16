@@ -7,6 +7,7 @@ SOURCES = cube_command.c \
           main.c \
           json_parser.c \
           json_value.c \
+          string_array.c \
           utf8.c
 OBJECTS = $(SOURCES:%.c=.build/%.o)
 CFLAGS = -g -Wall

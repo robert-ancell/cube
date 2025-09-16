@@ -28,14 +28,6 @@ static int do_create() {
   return 1;
 }
 
-static size_t string_array_length(char **array) {
-  size_t length = 0;
-  while (array[length] != NULL) {
-    length++;
-  }
-  return length;
-}
-
 static CubeCommand **add_command_take(CubeCommand **commands,
                                       size_t *commands_length,
                                       CubeCommand *command) {
@@ -53,22 +45,38 @@ static int do_build() {
   CubeCommand **commands = NULL;
   size_t commands_length = 0;
   for (size_t i = 0; i < programs_length; i++) {
-    size_t sources_length;
-    char **sources = cube_program_get_sources(programs[i], &sources_length);
+    StringArray *sources = cube_program_get_sources(programs[i]);
+    size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
-      char *inputs[] = {sources[j], NULL};
-      char *args[] = {"echo", "compile", sources[j], NULL};
-      commands = add_command_take(
-          commands, &commands_length,
-          cube_command_new(inputs, string_array_length(inputs), args,
-                           string_array_length(args), NULL, 0));
+      const char *source = string_array_get_element(sources, j);
+      StringArray *inputs = string_array_new();
+      string_array_append(inputs, source);
+      StringArray *args = string_array_new();
+      string_array_append(args, "echo");
+      string_array_append(args, "compile");
+      string_array_append(args, source);
+      StringArray *outputs = string_array_new();
+
+      commands = add_command_take(commands, &commands_length,
+                                  cube_command_new(inputs, args, outputs));
+
+      string_array_unref(inputs);
+      string_array_unref(args);
+      string_array_unref(outputs);
     }
-    char *args[] = {"echo", "link", (char *)cube_program_get_name(programs[i]),
-                    NULL};
-    commands = add_command_take(
-        commands, &commands_length,
-        cube_command_new(sources, string_array_length(sources), args,
-                         string_array_length(args), NULL, 0));
+    StringArray *inputs = string_array_new();
+    StringArray *args = string_array_new();
+    string_array_append(args, "echo");
+    string_array_append(args, "link");
+    string_array_append(args, cube_program_get_name(programs[i]));
+    StringArray *outputs = string_array_new();
+
+    commands = add_command_take(commands, &commands_length,
+                                cube_command_new(sources, args, outputs));
+
+    string_array_unref(inputs);
+    string_array_unref(args);
+    string_array_unref(outputs);
   }
 
   CubeCommandRunner *runner =
