@@ -433,11 +433,14 @@ void json_value_unref(JsonValue *self) {
       free(self->data.object.names[i]);
       json_value_unref(self->data.object.values[i]);
     }
+    free(self->data.object.names);
+    free(self->data.object.values);
     break;
   case JSON_VALUE_TYPE_ARRAY:
     for (size_t i = 0; i < self->data.array.length; i++) {
       json_value_unref(self->data.array.elements[i]);
     }
+    free(self->data.array.elements);
     break;
   case JSON_VALUE_TYPE_STRING:
     free(self->data.string);
