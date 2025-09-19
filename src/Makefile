@@ -5,9 +5,12 @@ SOURCES = cube_command.c \
           cube_project.c \
           cube_project_loader.c \
           main.c \
+          path_functions.c \
           json_parser.c \
           json_value.c \
           string_array.c \
+          string_builder.c \
+          string_functions.c \
           utf8.c
 OBJECTS = $(SOURCES:%.c=.build/%.o)
 CFLAGS = -g -Wall

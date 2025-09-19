@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "string_array.h"
+#include "string_functions.h"
 
 struct _StringArray {
   int ref;
@@ -38,6 +39,16 @@ const char *string_array_get_element(StringArray *self, size_t i) {
     return NULL;
   }
   return self->strings[i];
+}
+
+bool string_array_contains(StringArray *self, const char *string) {
+  for (size_t i = 0; i < self->strings_length; i++) {
+    if (string_matches(self->strings[i], string)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 StringArray *string_array_ref(StringArray *self) {

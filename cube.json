@@ -14,7 +14,10 @@
         "src/json_parser.c",
         "src/json_value.c",
         "src/main.c",
+        "src/path_functions.c",
         "src/string_array.c",
+        "src/string_builder.c",
+        "src/string_functions.c",
         "src/utf8.c"
       ],
       "defines": { "FOO": "BAR" },
