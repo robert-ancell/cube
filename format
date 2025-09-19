@@ -1,0 +1,2 @@
+clang-format -i src/*.[ch]
+black bootstrap

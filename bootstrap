@@ -1,0 +1,15 @@
+#!/usr/bin/python3
+
+import json
+import subprocess
+
+project = json.load(open("cube.json"))
+for program in project["programs"]:
+    if program["name"] == "cube":
+        command = ["gcc", "-g", "-Wall"]
+        for source in program["sources"]:
+            command.append(source)
+        for library in program["libraries"]:
+            command.append("-l" + library)
+        command.extend(["-o", "cube"])
+subprocess.run(command)
