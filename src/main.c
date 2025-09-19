@@ -89,6 +89,7 @@ static CubeCommand **add_compile_command(CubeCommand **commands,
   StringArray *args = string_array_new();
   // string_array_append(args, "echo");
   string_array_append(args, "gcc");
+  string_array_append(args, "-MMD");
   string_array_append(args, "-g");
   string_array_append(args, "-Wall");
   string_array_append(args, "-c");
