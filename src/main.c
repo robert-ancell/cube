@@ -21,12 +21,15 @@ static CubeProject *load_project() {
   return project;
 }
 
-static int do_create() {
+static int do_create(int argc, char **argv) {
   CubeProject *project = load_project();
+  if (project != NULL) {
+    fprintf(stderr, "Not creating project - project already exists\n");
+    cube_project_unref(project);
+    return 1;
+  }
 
   printf("FIXME: create\n");
-
-  cube_project_unref(project);
 
   return 1;
 }
@@ -226,20 +229,58 @@ static int do_clean() {
 }
 
 static int do_help(int argc, char **argv) {
-  fprintf(stderr,
-          "Cube is a tool for building C projects.\n"
-          "\n"
-          "Usage: cube <command> [<options>...]\n"
-          "\n"
-          "Commands:\n"
-          " create  Create project\n"
-          " build   Build project\n"
-          " test    Run tests\n"
-          " format  Reformat code\n"
-          " clean   Delete build artifacts\n"
-          " help    Show command help\n"
-          "\n"
-          "For more information on a command, run 'cube help <command>'\n");
+  if (argc == 0) {
+    fprintf(stderr,
+            "Cube is a tool for building C projects.\n"
+            "\n"
+            "Usage: cube <command> [<options>...]\n"
+            "\n"
+            "Commands:\n"
+            " create  Create project\n"
+            " build   Build project\n"
+            " test    Run tests\n"
+            " format  Reformat code\n"
+            " clean   Delete build artifacts\n"
+            " help    Show command help\n"
+            "\n"
+            "For more information on a command, run 'cube help <command>'\n");
+    return 0;
+  }
+
+  if (argc > 1) {
+    fprintf(stderr, "FIXME\n");
+    return 1;
+  }
+
+  const char *command = argv[0];
+  if (string_matches(command, "create")) {
+    fprintf(stderr, "Usage:\n"
+                    "  cube create <project>\n"
+                    "\n"
+                    "Create a new Cube project.\n");
+  } else if (string_matches(command, "build")) {
+    fprintf(stderr, "Usage:\n"
+                    "  cube build\n"
+                    "\n"
+                    "Build all artifacts for this project.\n");
+  } else if (string_matches(command, "test")) {
+    fprintf(stderr, "FIXME help test\n");
+  } else if (string_matches(command, "format")) {
+    fprintf(stderr, "FIXME help format\n");
+  } else if (string_matches(command, "clean")) {
+    fprintf(stderr, "Usage:\n"
+                    "  cube clean\n"
+                    "\n"
+                    "Delete all built artifacts.\n");
+  } else if (string_matches(command, "help")) {
+    fprintf(stderr, "Usage:\n"
+                    "  cube help [<command>]\n"
+                    "\n"
+                    "Show help information about each Cube command.\n");
+  } else {
+    fprintf(stderr, "Unknown command \"%s\", see `cube help`.\n", command);
+  }
+
   return 0;
 }
 
@@ -249,7 +290,7 @@ int main(int argc, char **argv) {
   char **command_argv = argv + 2;
 
   if (string_matches(command, "create")) {
-    return do_create();
+    return do_create(command_argc, command_argv);
   } else if (string_matches(command, "build")) {
     return do_build();
   } else if (string_matches(command, "test")) {
