@@ -121,6 +121,15 @@ void cube_command_runner_run(CubeCommandRunner *self) {
     if (pid == -1) {
       continue;
     }
+
+    if (WIFEXITED(status)) {
+      if (WEXITSTATUS(status) != 0) {
+        self->error = CUBE_COMMAND_RUNNER_ERROR_COMMAND_FAILED;
+      }
+    } else if (WIFSIGNALED(status)) {
+      self->error = CUBE_COMMAND_RUNNER_ERROR_COMMAND_FAILED;
+    }
+
     for (size_t i = 0; i < self->commands_length; i++) {
       if (self->command_status[i].pid == pid) {
         self->command_status[i].is_complete = true;

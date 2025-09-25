@@ -2,7 +2,10 @@
 
 typedef struct _CubeCommandRunner CubeCommandRunner;
 
-typedef enum { CUBE_COMMAND_RUNNER_ERROR_NONE } CubeCommandRunnerError;
+typedef enum {
+  CUBE_COMMAND_RUNNER_ERROR_NONE,
+  CUBE_COMMAND_RUNNER_ERROR_COMMAND_FAILED
+} CubeCommandRunnerError;
 
 #include "cube_command.h"
 
