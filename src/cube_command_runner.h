@@ -10,7 +10,15 @@ typedef enum {
 #include "cube_command.h"
 #include "cube_command_array.h"
 
-CubeCommandRunner *cube_command_runner_new(CubeCommandArray *commands);
+typedef struct {
+  void (*command_started)(CubeCommandRunner *self, CubeCommand *command,
+                          void *user_data);
+} CubeCommandRunnerCallbacks;
+
+CubeCommandRunner *
+cube_command_runner_new(CubeCommandArray *commands,
+                        const CubeCommandRunnerCallbacks *callbacks,
+                        void *user_data);
 
 void cube_command_runner_run(CubeCommandRunner *self);
 

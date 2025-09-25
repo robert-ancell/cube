@@ -14,6 +14,8 @@ typedef struct {
 
 struct _CubeCommandRunner {
   CubeCommandArray *commands;
+  const CubeCommandRunnerCallbacks *callbacks;
+  void *user_data;
   CommandStatus *command_status;
   CubeCommandRunnerError error;
 };
@@ -61,10 +63,15 @@ static bool can_run(CubeCommandRunner *self, CubeCommand *command) {
   return true;
 }
 
-CubeCommandRunner *cube_command_runner_new(CubeCommandArray *commands) {
+CubeCommandRunner *
+cube_command_runner_new(CubeCommandArray *commands,
+                        const CubeCommandRunnerCallbacks *callbacks,
+                        void *user_data) {
   CubeCommandRunner *self = malloc(sizeof(CubeCommandRunner));
 
   self->commands = cube_command_array_ref(commands);
+  self->callbacks = callbacks;
+  self->user_data = user_data;
   size_t commands_length = cube_command_array_get_length(self->commands);
   self->command_status = malloc(sizeof(CommandStatus) * commands_length);
   for (size_t i = 0; i < commands_length; i++) {
@@ -100,6 +107,10 @@ void cube_command_runner_run(CubeCommandRunner *self) {
         argv[j] = strdup(string_array_get_element(args, j));
       }
       argv[args_length] = NULL;
+
+      if (self->callbacks->command_started != NULL) {
+        self->callbacks->command_started(self, command, self->user_data);
+      }
 
       pid_t pid = fork();
       // FIXME: pid == -1

@@ -232,6 +232,20 @@ static void add_compile_command(CubeCommandArray *commands,
   string_array_unref(outputs);
 }
 
+static void runner_command_started(CubeCommandRunner *runner,
+                                   CubeCommand *command, void *user_data) {
+  fprintf(stderr, "Building");
+  StringArray *outputs = cube_command_get_outputs(command);
+  size_t outputs_length = string_array_get_length(outputs);
+  for (size_t i = 0; i < outputs_length; i++) {
+    fprintf(stderr, " %s", string_array_get_element(outputs, i));
+  }
+  fprintf(stderr, "...\n");
+}
+
+static CubeCommandRunnerCallbacks runner_callbacks = {
+    .command_started = runner_command_started};
+
 static int do_build() {
   CubeProject *project = load_project();
   if (project == NULL) {
@@ -305,7 +319,8 @@ static int do_build() {
     string_array_unref(outputs);
   }
 
-  CubeCommandRunner *runner = cube_command_runner_new(commands);
+  CubeCommandRunner *runner =
+      cube_command_runner_new(commands, &runner_callbacks, NULL);
   cube_command_array_unref(commands);
   cube_command_runner_run(runner);
 
