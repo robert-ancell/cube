@@ -16,6 +16,7 @@ struct _CubeCommandRunner {
   CubeCommand **commands;
   size_t commands_length;
   CommandStatus *command_status;
+  CubeCommandRunnerError error;
 };
 
 static bool is_complete(CubeCommandRunner *self) {
@@ -72,6 +73,7 @@ CubeCommandRunner *cube_command_runner_new(CubeCommand **commands,
     self->command_status[i].pid = -1;
     self->command_status[i].is_complete = false;
   }
+  self->error = CUBE_COMMAND_RUNNER_ERROR_NONE;
 
   return self;
 }
@@ -126,6 +128,10 @@ void cube_command_runner_run(CubeCommandRunner *self) {
       }
     }
   }
+}
+
+CubeCommandRunnerError cube_command_runner_get_error(CubeCommandRunner *self) {
+  return self->error;
 }
 
 void cube_command_runner_unref(CubeCommandRunner *self) {

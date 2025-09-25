@@ -258,15 +258,21 @@ static int do_build() {
   CubeCommandRunner *runner =
       cube_command_runner_new(commands, commands_length);
   cube_command_runner_run(runner);
-  cube_command_runner_unref(runner);
+
+  if (cube_command_runner_get_error(runner) == CUBE_COMMAND_RUNNER_ERROR_NONE) {
+    for (size_t i = 0; i < programs_length; i++) {
+      CubeProgram *program = cube_program_array_get_element(programs, i);
+      fprintf(stderr, "Build complete, run with `./%s`\n",
+              cube_program_get_name(program));
+    }
+  }
 
   cube_project_unref(project);
   for (size_t i = 0; i < commands_length; i++) {
     cube_command_unref(commands[i]);
   }
   free(commands);
-
-  // FIXME: Show complete message
+  cube_command_runner_unref(runner);
 
   return 1;
 }
