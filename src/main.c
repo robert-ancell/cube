@@ -9,6 +9,7 @@
 #include "path_functions.h"
 #include "string_builder.h"
 #include "string_functions.h"
+#include "utf8.h"
 
 static int print_no_project_error() {
   fprintf(stderr, "No Cube project found, see `cube help create`.\n");
@@ -145,6 +146,74 @@ static char *get_compile_output(const char *build_dir, const char *input_path) {
   return output_path;
 }
 
+static void add_depends(StringArray *inputs, const char *build_dir,
+                        const char *source) {
+  char *deps_path = get_compile_output(build_dir, source);
+  deps_path[string_get_length(deps_path) - 1] = 'd';
+
+  // FIXME: Replace with file_get_contents or mmap
+  FILE *f = fopen(deps_path, "r");
+  if (f == NULL) {
+    string_array_append(inputs, source);
+    return;
+  }
+
+  // FIXME: Length and error
+  char deps[1024];
+  size_t n_read = fread(deps, 1, 1024 - 1, f);
+  deps[n_read] = '\0';
+  fclose(f);
+  free(deps_path);
+
+  size_t offset = 0;
+
+  // Skip output
+  while (true) {
+    if (deps[offset] == '\0') {
+      return;
+    }
+    if (deps[offset] == ':') {
+      offset++;
+      break;
+    } else {
+      offset++;
+    }
+  }
+
+  // List of inputs.
+  while (true) {
+    // Skip whitespace
+    while (true) {
+      if (deps[offset] == ' ') {
+        offset++;
+      } else if (deps[offset] == '\\' && deps[offset + 1] == '\n') {
+        offset += 2;
+      } else if (deps[offset] == '\n' || deps[offset] == '\0') {
+        return;
+      } else {
+        break;
+      }
+    }
+    StringBuilder *builder = string_builder_new();
+    while (true) {
+      if (deps[offset] == '\0' || deps[offset] == ' ' || deps[offset] == '\n' ||
+          (deps[offset] == '\\' && deps[offset] == '\n')) {
+        break;
+      }
+      // FIXME: Handle invalid codepoint
+      size_t codepoint_length;
+      uint32_t codepoint =
+          utf8_read_codepoint(deps + offset, &codepoint_length);
+      string_builder_append_codepoint(builder, codepoint);
+      offset += codepoint_length;
+    }
+    if (string_builder_get_length(builder) > 0) {
+      string_array_append_take(inputs, string_builder_take_string(builder));
+    }
+    string_builder_unref(builder);
+  }
+}
+
 static CubeCommand **add_compile_command(CubeCommand **commands,
                                          size_t *commands_length,
                                          const char *build_dir,
@@ -153,7 +222,7 @@ static CubeCommand **add_compile_command(CubeCommand **commands,
 
   StringArray *inputs = string_array_new();
   string_array_append(inputs, build_dir);
-  string_array_append(inputs, source);
+  add_depends(inputs, build_dir, source);
 
   StringArray *args = string_array_new();
   // string_array_append(args, "echo");
