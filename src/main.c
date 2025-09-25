@@ -238,6 +238,11 @@ static int do_clean() {
   return 1;
 }
 
+static int print_invalid_command_args(const char *command) {
+  fprintf(stderr, "Invalid arguments, see `cube help %s`.\n", command);
+  return 1;
+}
+
 static void print_command_help(const char *command_and_args,
                                const char *description) {
   fprintf(stderr,
@@ -269,8 +274,7 @@ static int do_help(int argc, char **argv) {
   }
 
   if (argc > 1) {
-    fprintf(stderr, "FIXME\n");
-    return 1;
+    return print_invalid_command_args("help");
   }
 
   const char *command = argv[0];
@@ -291,13 +295,18 @@ static int do_help(int argc, char **argv) {
                        "Show help information about each Cube command.");
   } else {
     fprintf(stderr, "Unknown command \"%s\", see `cube help`.\n", command);
+    return 1;
   }
 
   return 0;
 }
 
 int main(int argc, char **argv) {
-  const char *command = argc > 1 ? argv[1] : "help";
+  if (argc <= 1) {
+    return do_help(0, NULL);
+  }
+
+  const char *command = argv[1];
   int command_argc = argc - 2;
   char **command_argv = argv + 2;
 
