@@ -4,26 +4,19 @@
 
 struct _CubeProject {
   int ref;
-  CubeProgram **programs;
-  size_t programs_length;
+  CubeProgramArray *programs;
 };
 
-CubeProject *cube_project_new(CubeProgram **programs, size_t programs_length) {
+CubeProject *cube_project_new(CubeProgramArray *programs) {
   CubeProject *self = malloc(sizeof(CubeProject));
 
   self->ref = 1;
-  self->programs = malloc(sizeof(CubeProgram *) * programs_length);
-  for (size_t i = 0; i < programs_length; i++) {
-    self->programs[i] = cube_program_ref(programs[i]);
-  }
-  self->programs_length = programs_length;
+  self->programs = cube_program_array_ref(programs);
 
   return self;
 }
 
-CubeProgram **cube_project_get_programs(CubeProject *self,
-                                        size_t *programs_length) {
-  *programs_length = self->programs_length;
+CubeProgramArray *cube_project_get_programs(CubeProject *self) {
   return self->programs;
 }
 
@@ -37,9 +30,6 @@ void cube_project_unref(CubeProject *self) {
     return;
   }
 
-  for (size_t i = 0; i < self->programs_length; i++) {
-    cube_program_unref(self->programs[i]);
-  }
-  free(self->programs);
+  cube_program_array_unref(self->programs);
   free(self);
 }

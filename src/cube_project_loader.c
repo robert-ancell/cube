@@ -31,25 +31,23 @@ static CubeProgram *decode_program(JsonValue *program_object) {
   return program;
 }
 
-static CubeProgram **decode_programs(JsonValue *program_array,
-                                     size_t *programs_length) {
+static CubeProgramArray *decode_programs(JsonValue *program_array) {
   if (json_value_get_type(program_array) != JSON_VALUE_TYPE_ARRAY) {
     return NULL;
   }
 
-  size_t programs_length_ = json_value_get_length(program_array);
-  CubeProgram **programs = malloc(sizeof(CubeProgram *) * programs_length_);
-  for (size_t i = 0; i < programs_length_; i++) {
+  size_t programs_length = json_value_get_length(program_array);
+  CubeProgramArray *programs = cube_program_array_new();
+  for (size_t i = 0; i < programs_length; i++) {
     CubeProgram *program =
         decode_program(json_value_get_element(program_array, i));
     if (program == NULL) {
-      // FIXME: free programs
+      cube_program_array_unref(programs);
       return NULL;
     }
-    programs[i] = program;
+    cube_program_array_append_take(programs, program);
   }
 
-  *programs_length = programs_length_;
   return programs;
 }
 
@@ -63,18 +61,14 @@ static CubeProject *decode_project(JsonParser *parser) {
     return NULL;
   }
 
-  size_t programs_length;
-  CubeProgram **programs = decode_programs(
-      json_value_get_member(project_object, "programs"), &programs_length);
+  CubeProgramArray *programs =
+      decode_programs(json_value_get_member(project_object, "programs"));
   if (programs == NULL) {
     return NULL;
   }
 
-  CubeProject *project = cube_project_new(programs, programs_length);
-  for (size_t i = 0; i < programs_length; i++) {
-    cube_program_unref(programs[i]);
-  }
-  free(programs);
+  CubeProject *project = cube_project_new(programs);
+  cube_program_array_unref(programs);
 
   return project;
 }

@@ -3,11 +3,11 @@
 typedef struct _CubeProject CubeProject;
 
 #include "cube_program.h"
+#include "cube_program_array.h"
 
-CubeProject *cube_project_new(CubeProgram **programs, size_t programs_length);
+CubeProject *cube_project_new(CubeProgramArray *programs);
 
-CubeProgram **cube_project_get_programs(CubeProject *self,
-                                        size_t *programs_length);
+CubeProgramArray *cube_project_get_programs(CubeProject *self);
 
 CubeProject *cube_project_ref(CubeProject *self);
 

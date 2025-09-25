@@ -132,14 +132,15 @@ static int do_build() {
 
   char *build_dir = string_copy(".cube/build");
 
-  size_t programs_length;
-  CubeProgram **programs = cube_project_get_programs(project, &programs_length);
+  CubeProgramArray *programs = cube_project_get_programs(project);
   CubeCommand **commands = NULL;
   size_t commands_length = 0;
 
   StringArray *output_dirs = string_array_new();
+  size_t programs_length = cube_program_array_get_length(programs);
   for (size_t i = 0; i < programs_length; i++) {
-    StringArray *sources = cube_program_get_sources(programs[i]);
+    CubeProgram *program = cube_program_array_get_element(programs, i);
+    StringArray *sources = cube_program_get_sources(program);
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
@@ -155,7 +156,8 @@ static int do_build() {
   }
 
   for (size_t i = 0; i < programs_length; i++) {
-    StringArray *sources = cube_program_get_sources(programs[i]);
+    CubeProgram *program = cube_program_array_get_element(programs, i);
+    StringArray *sources = cube_program_get_sources(program);
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
@@ -175,7 +177,7 @@ static int do_build() {
       const char *source = string_array_get_element(sources, j);
       string_array_append_take(args, get_compile_output(build_dir, source));
     }
-    StringArray *libraries = cube_program_get_libraries(programs[i]);
+    StringArray *libraries = cube_program_get_libraries(program);
     size_t libraries_length = string_array_get_length(libraries);
     for (size_t j = 0; j < libraries_length; j++) {
       const char *library = string_array_get_element(libraries, j);
@@ -184,10 +186,10 @@ static int do_build() {
       string_array_append(args, arg);
     }
     string_array_append(args, "-o");
-    string_array_append(args, cube_program_get_name(programs[i]));
+    string_array_append(args, cube_program_get_name(program));
 
     StringArray *outputs = string_array_new();
-    string_array_append(outputs, cube_program_get_name(programs[i]));
+    string_array_append(outputs, cube_program_get_name(program));
 
     commands = add_command_take(commands, &commands_length,
                                 cube_command_new(inputs, args, outputs));
