@@ -101,18 +101,7 @@ static int do_create(int argc, char **argv) {
   return 0;
 }
 
-static CubeCommand **add_command_take(CubeCommand **commands,
-                                      size_t *commands_length,
-                                      CubeCommand *command) {
-  (*commands_length)++;
-  commands = realloc(commands, sizeof(CubeCommand *) * *commands_length);
-  commands[*commands_length - 1] = command;
-  return commands;
-}
-
-static CubeCommand **add_mkdir_command(CubeCommand **commands,
-                                       size_t *commands_length,
-                                       const char *path) {
+static void add_mkdir_command(CubeCommandArray *commands, const char *path) {
   StringArray *inputs = string_array_new();
 
   StringArray *args = string_array_new();
@@ -124,14 +113,12 @@ static CubeCommand **add_mkdir_command(CubeCommand **commands,
   StringArray *outputs = string_array_new();
   string_array_append(outputs, path);
 
-  commands = add_command_take(commands, commands_length,
-                              cube_command_new(inputs, args, outputs));
+  cube_command_array_append_take(commands,
+                                 cube_command_new(inputs, args, outputs));
 
   string_array_unref(inputs);
   string_array_unref(args);
   string_array_unref(outputs);
-
-  return commands;
 }
 
 static char *get_compile_output(const char *build_dir, const char *input_path) {
@@ -214,10 +201,8 @@ static void add_depends(StringArray *inputs, const char *build_dir,
   }
 }
 
-static CubeCommand **add_compile_command(CubeCommand **commands,
-                                         size_t *commands_length,
-                                         const char *build_dir,
-                                         const char *source) {
+static void add_compile_command(CubeCommandArray *commands,
+                                const char *build_dir, const char *source) {
   char *output_path = get_compile_output(build_dir, source);
 
   StringArray *inputs = string_array_new();
@@ -238,15 +223,13 @@ static CubeCommand **add_compile_command(CubeCommand **commands,
   StringArray *outputs = string_array_new();
   string_array_append(outputs, output_path);
 
-  commands = add_command_take(commands, commands_length,
-                              cube_command_new(inputs, args, outputs));
+  cube_command_array_append_take(commands,
+                                 cube_command_new(inputs, args, outputs));
 
   free(output_path);
   string_array_unref(inputs);
   string_array_unref(args);
   string_array_unref(outputs);
-
-  return commands;
 }
 
 static int do_build() {
@@ -258,8 +241,7 @@ static int do_build() {
   char *build_dir = string_copy(".cube/build");
 
   CubeProgramArray *programs = cube_project_get_programs(project);
-  CubeCommand **commands = NULL;
-  size_t commands_length = 0;
+  CubeCommandArray *commands = cube_command_array_new();
 
   StringArray *output_dirs = string_array_new();
   size_t programs_length = cube_program_array_get_length(programs);
@@ -273,7 +255,7 @@ static int do_build() {
       char *output_dir = path_get_directory(output_path);
       if (!string_array_contains(output_dirs, output_dir)) {
         string_array_append(output_dirs, output_dir);
-        commands = add_mkdir_command(commands, &commands_length, output_dir);
+        add_mkdir_command(commands, output_dir);
       }
       free(output_path);
       free(output_dir);
@@ -286,8 +268,7 @@ static int do_build() {
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
-      commands =
-          add_compile_command(commands, &commands_length, build_dir, source);
+      add_compile_command(commands, build_dir, source);
     }
     StringArray *inputs = string_array_new();
     for (size_t j = 0; j < sources_length; j++) {
@@ -316,16 +297,16 @@ static int do_build() {
     StringArray *outputs = string_array_new();
     string_array_append(outputs, cube_program_get_name(program));
 
-    commands = add_command_take(commands, &commands_length,
-                                cube_command_new(inputs, args, outputs));
+    cube_command_array_append_take(commands,
+                                   cube_command_new(inputs, args, outputs));
 
     string_array_unref(inputs);
     string_array_unref(args);
     string_array_unref(outputs);
   }
 
-  CubeCommandRunner *runner =
-      cube_command_runner_new(commands, commands_length);
+  CubeCommandRunner *runner = cube_command_runner_new(commands);
+  cube_command_array_unref(commands);
   cube_command_runner_run(runner);
 
   if (cube_command_runner_get_error(runner) == CUBE_COMMAND_RUNNER_ERROR_NONE) {
@@ -337,10 +318,6 @@ static int do_build() {
   }
 
   cube_project_unref(project);
-  for (size_t i = 0; i < commands_length; i++) {
-    cube_command_unref(commands[i]);
-  }
-  free(commands);
   cube_command_runner_unref(runner);
 
   return 1;

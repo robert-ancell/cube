@@ -13,14 +13,14 @@ typedef struct {
 } CommandStatus;
 
 struct _CubeCommandRunner {
-  CubeCommand **commands;
-  size_t commands_length;
+  CubeCommandArray *commands;
   CommandStatus *command_status;
   CubeCommandRunnerError error;
 };
 
 static bool is_complete(CubeCommandRunner *self) {
-  for (size_t i = 0; i < self->commands_length; i++) {
+  size_t commands_length = cube_command_array_get_length(self->commands);
+  for (size_t i = 0; i < commands_length; i++) {
     if (!self->command_status[i].is_complete) {
       return false;
     }
@@ -30,8 +30,10 @@ static bool is_complete(CubeCommandRunner *self) {
 }
 
 static bool have_input(CubeCommandRunner *self, const char *input) {
-  for (size_t i = 0; i < self->commands_length; i++) {
-    StringArray *outputs = cube_command_get_outputs(self->commands[i]);
+  size_t commands_length = cube_command_array_get_length(self->commands);
+  for (size_t i = 0; i < commands_length; i++) {
+    StringArray *outputs = cube_command_get_outputs(
+        cube_command_array_get_element(self->commands, i));
     size_t outputs_length = string_array_get_length(outputs);
 
     for (size_t j = 0; j < outputs_length; j++) {
@@ -59,15 +61,11 @@ static bool can_run(CubeCommandRunner *self, CubeCommand *command) {
   return true;
 }
 
-CubeCommandRunner *cube_command_runner_new(CubeCommand **commands,
-                                           size_t commands_length) {
+CubeCommandRunner *cube_command_runner_new(CubeCommandArray *commands) {
   CubeCommandRunner *self = malloc(sizeof(CubeCommandRunner));
 
-  self->commands = malloc(sizeof(CubeCommand *) * commands_length);
-  for (size_t i = 0; i < commands_length; i++) {
-    self->commands[i] = cube_command_ref(commands[i]);
-  }
-  self->commands_length = commands_length;
+  self->commands = cube_command_array_ref(commands);
+  size_t commands_length = cube_command_array_get_length(self->commands);
   self->command_status = malloc(sizeof(CommandStatus) * commands_length);
   for (size_t i = 0; i < commands_length; i++) {
     self->command_status[i].pid = -1;
@@ -81,8 +79,9 @@ CubeCommandRunner *cube_command_runner_new(CubeCommand **commands,
 void cube_command_runner_run(CubeCommandRunner *self) {
   while (!is_complete(self)) {
     // Run any commands that are ready.
-    for (size_t i = 0; i < self->commands_length; i++) {
-      CubeCommand *command = self->commands[i];
+    size_t commands_length = cube_command_array_get_length(self->commands);
+    for (size_t i = 0; i < commands_length; i++) {
+      CubeCommand *command = cube_command_array_get_element(self->commands, i);
 
       // Already running.
       if (self->command_status[i].pid != -1) {
@@ -130,7 +129,7 @@ void cube_command_runner_run(CubeCommandRunner *self) {
       self->error = CUBE_COMMAND_RUNNER_ERROR_COMMAND_FAILED;
     }
 
-    for (size_t i = 0; i < self->commands_length; i++) {
+    for (size_t i = 0; i < commands_length; i++) {
       if (self->command_status[i].pid == pid) {
         self->command_status[i].is_complete = true;
         break;
@@ -144,10 +143,7 @@ CubeCommandRunnerError cube_command_runner_get_error(CubeCommandRunner *self) {
 }
 
 void cube_command_runner_unref(CubeCommandRunner *self) {
-  for (size_t i = 0; i < self->commands_length; i++) {
-    cube_command_unref(self->commands[i]);
-  }
-  free(self->commands);
+  cube_command_array_unref(self->commands);
   free(self->command_status);
   free(self);
 }

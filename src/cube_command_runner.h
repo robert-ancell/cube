@@ -8,9 +8,9 @@ typedef enum {
 } CubeCommandRunnerError;
 
 #include "cube_command.h"
+#include "cube_command_array.h"
 
-CubeCommandRunner *cube_command_runner_new(CubeCommand **commands,
-                                           size_t commands_length);
+CubeCommandRunner *cube_command_runner_new(CubeCommandArray *commands);
 
 void cube_command_runner_run(CubeCommandRunner *self);
 

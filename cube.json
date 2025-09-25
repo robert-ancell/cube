@@ -7,6 +7,7 @@
       "name": "cube",
       "sources": [
         "src/cube_command.c",
+        "src/cube_command_array.c",
         "src/cube_command_runner.c",
         "src/cube_program.c",
         "src/cube_program_array.c",
