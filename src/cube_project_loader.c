@@ -9,53 +9,80 @@ struct _CubeProjectLoader {
   CubeProject *project;
 };
 
-static CubeProject *decode_project(JsonValue *project) {
-  if (json_value_get_type(project) != JSON_VALUE_TYPE_OBJECT) {
+static CubeProgram *decode_program(JsonValue *program_object) {
+  if (json_value_get_type(program_object) != JSON_VALUE_TYPE_OBJECT) {
     return NULL;
   }
 
-  JsonValue *program_array = json_value_get_member(project, "programs");
+  const char *name = json_value_get_string_member(program_object, "name", "");
+  StringArray *sources =
+      json_value_get_string_array_member(program_object, "sources");
+  if (sources == NULL) {
+    sources = string_array_new();
+  }
+  StringArray *libraries =
+      json_value_get_string_array_member(program_object, "libraries");
+  if (libraries == NULL) {
+    libraries = string_array_new();
+  }
+
+  CubeProgram *program = cube_program_new(name, sources, libraries);
+  string_array_unref(sources);
+  return program;
+}
+
+static CubeProgram **decode_programs(JsonValue *program_array,
+                                     size_t *programs_length) {
   if (json_value_get_type(program_array) != JSON_VALUE_TYPE_ARRAY) {
     return NULL;
   }
 
-  size_t programs_length = json_value_get_length(program_array);
-  CubeProgram **programs = malloc(sizeof(CubeProgram *) * programs_length);
-  for (size_t i = 0; i < programs_length; i++) {
-    JsonValue *program = json_value_get_element(program_array, i);
-    if (json_value_get_type(program) != JSON_VALUE_TYPE_OBJECT) {
+  size_t programs_length_ = json_value_get_length(program_array);
+  CubeProgram **programs = malloc(sizeof(CubeProgram *) * programs_length_);
+  for (size_t i = 0; i < programs_length_; i++) {
+    CubeProgram *program =
+        decode_program(json_value_get_element(program_array, i));
+    if (program == NULL) {
       // FIXME: free programs
       return NULL;
     }
-
-    const char *name = json_value_get_string_member(program, "name", "");
-    StringArray *sources =
-        json_value_get_string_array_member(program, "sources");
-    if (sources == NULL) {
-      sources = string_array_new();
-    }
-    StringArray *libraries =
-        json_value_get_string_array_member(program, "libraries");
-    if (libraries == NULL) {
-      libraries = string_array_new();
-    }
-
-    programs[i] = cube_program_new(name, sources, libraries);
-    string_array_unref(sources);
+    programs[i] = program;
   }
 
-  CubeProject *p = cube_project_new(programs, programs_length);
+  *programs_length = programs_length_;
+  return programs;
+}
+
+static CubeProject *decode_project(JsonParser *parser) {
+  if (json_parser_get_error(parser) != JSON_PARSER_ERROR_NONE) {
+    return NULL;
+  }
+
+  JsonValue *project_object = json_parser_get_json(parser);
+  if (json_value_get_type(project_object) != JSON_VALUE_TYPE_OBJECT) {
+    return NULL;
+  }
+
+  size_t programs_length;
+  CubeProgram **programs = decode_programs(
+      json_value_get_member(project_object, "programs"), &programs_length);
+  if (programs == NULL) {
+    return NULL;
+  }
+
+  CubeProject *project = cube_project_new(programs, programs_length);
   for (size_t i = 0; i < programs_length; i++) {
     cube_program_unref(programs[i]);
   }
   free(programs);
 
-  return p;
+  return project;
 }
 
 static void load_project(CubeProjectLoader *self) {
   FILE *f = fopen("cube.json", "r");
   if (f == NULL) {
+    self->error = CUBE_PROJECT_LOADER_ERROR_NO_PROJECT;
     return;
   }
   char data[1024];
@@ -63,12 +90,12 @@ static void load_project(CubeProjectLoader *self) {
   data[n_read] = '\0';
   fclose(f);
   JsonParser *parser = json_parser_new(data);
-  if (json_parser_get_error(parser) != JSON_PARSER_ERROR_NONE) {
-    json_parser_unref(parser);
+  self->project = decode_project(parser);
+  json_parser_unref(parser);
+  if (self->project == NULL) {
+    self->error = CUBE_PROJECT_LOADER_ERROR_INVALID_PROJECT;
     return;
   }
-  self->project = decode_project(json_parser_get_json(parser));
-  json_parser_unref(parser);
 }
 
 CubeProjectLoader *cube_project_loader_new() {

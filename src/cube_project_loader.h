@@ -2,7 +2,11 @@
 
 typedef struct _CubeProjectLoader CubeProjectLoader;
 
-typedef enum { CUBE_PROJECT_LOADER_ERROR_NONE } CubeProjectLoaderError;
+typedef enum {
+  CUBE_PROJECT_LOADER_ERROR_NONE,
+  CUBE_PROJECT_LOADER_ERROR_NO_PROJECT,
+  CUBE_PROJECT_LOADER_ERROR_INVALID_PROJECT
+} CubeProjectLoaderError;
 
 #include "cube_project.h"
 

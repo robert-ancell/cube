@@ -114,8 +114,21 @@ static CubeCommand **add_compile_command(CubeCommand **commands,
   return commands;
 }
 
+static int print_no_project_error() {
+  fprintf(stderr, "No Cube project found, see `cube help create`.\n");
+  return 1;
+}
+
+static int print_invalid_command_args(const char *command) {
+  fprintf(stderr, "Invalid arguments, see `cube help %s`.\n", command);
+  return 1;
+}
+
 static int do_build() {
   CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
 
   char *build_dir = string_copy(".cube/build");
 
@@ -200,6 +213,9 @@ static int do_build() {
 
 static int do_test() {
   CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
 
   printf("FIXME: test\n");
 
@@ -210,6 +226,9 @@ static int do_test() {
 
 static int do_document() {
   CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
 
   printf("FIXME: document\n");
 
@@ -220,6 +239,9 @@ static int do_document() {
 
 static int do_format() {
   CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
 
   printf("FIXME: format\n");
 
@@ -230,16 +252,14 @@ static int do_format() {
 
 static int do_clean() {
   CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
 
   printf("FIXME: clean\n");
 
   cube_project_unref(project);
 
-  return 1;
-}
-
-static int print_invalid_command_args(const char *command) {
-  fprintf(stderr, "Invalid arguments, see `cube help %s`.\n", command);
   return 1;
 }
 
