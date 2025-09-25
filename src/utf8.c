@@ -41,35 +41,3 @@ uint32_t utf8_read_codepoint(const char *text, size_t *length) {
     return 0;
   }
 }
-
-char *utf8_append_codepoint(char *string, uint32_t codepoint) {
-  size_t string_length = strlen(string);
-  if (codepoint <= 0x7f) {
-    string_length++;
-    string = realloc(string, string_length + 1);
-    string[string_length - 1] = codepoint;
-  } else if (codepoint <= 0x7ff) {
-    string_length += 2;
-    string = realloc(string, string_length + 1);
-    string[string_length - 2] = 0xc0 | (codepoint >> 6);
-    string[string_length - 1] = 0x80 | (codepoint & 0x3f);
-  } else if (codepoint <= 0xffff) {
-    string_length += 3;
-    string = realloc(string, string_length + 1);
-    string[string_length - 3] = 0xe0 | (codepoint >> 12);
-    string[string_length - 2] = 0x80 | ((codepoint >> 6) & 0xf3);
-    string[string_length - 1] = 0x80 | (codepoint & 0x3f);
-  } else if (codepoint <= 0x10ffff) {
-    string_length += 4;
-    string = realloc(string, string_length + 1);
-    string[string_length - 4] = 0xf0 | (codepoint >> 18);
-    string[string_length - 3] = 0x80 | ((codepoint >> 12) & 0xf3);
-    string[string_length - 2] = 0x80 | ((codepoint >> 6) & 0xf3);
-    string[string_length - 1] = 0x80 | (codepoint & 0x3f);
-  } else {
-    return NULL;
-  }
-  string[string_length] = '\0';
-
-  return string;
-}

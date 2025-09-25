@@ -36,6 +36,38 @@ void string_builder_append(StringBuilder *self, const char *string) {
   self->string_length += string_length;
 }
 
+void string_builder_append_codepoint(StringBuilder *self, uint32_t codepoint) {
+  if (codepoint <= 0x7f) {
+    self->string_length++;
+    self->string = realloc(self->string, self->string_length + 1);
+    self->string[self->string_length - 1] = codepoint;
+    self->string[self->string_length] = '\0';
+  } else if (codepoint <= 0x7ff) {
+    self->string_length += 2;
+    self->string = realloc(self->string, self->string_length + 1);
+    self->string[self->string_length - 2] = 0xc0 | (codepoint >> 6);
+    self->string[self->string_length - 1] = 0x80 | (codepoint & 0x3f);
+    self->string[self->string_length] = '\0';
+  } else if (codepoint <= 0xffff) {
+    self->string_length += 3;
+    self->string = realloc(self->string, self->string_length + 1);
+    self->string[self->string_length - 3] = 0xe0 | (codepoint >> 12);
+    self->string[self->string_length - 2] = 0x80 | ((codepoint >> 6) & 0xf3);
+    self->string[self->string_length - 1] = 0x80 | (codepoint & 0x3f);
+    self->string[self->string_length] = '\0';
+  } else if (codepoint <= 0x10ffff) {
+    self->string_length += 4;
+    self->string = realloc(self->string, self->string_length + 1);
+    self->string[self->string_length - 4] = 0xf0 | (codepoint >> 18);
+    self->string[self->string_length - 3] = 0x80 | ((codepoint >> 12) & 0xf3);
+    self->string[self->string_length - 2] = 0x80 | ((codepoint >> 6) & 0xf3);
+    self->string[self->string_length - 1] = 0x80 | (codepoint & 0x3f);
+    self->string[self->string_length] = '\0';
+  } else {
+    // FIXME: Invalid codepoint
+  }
+}
+
 size_t string_builder_get_length(StringBuilder *self) {
   return self->string_length;
 }

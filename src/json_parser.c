@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "json_parser.h"
+#include "string_builder.h"
 #include "utf8.h"
 
 struct _JsonParser {
@@ -48,7 +49,7 @@ static JsonValue *parse_string(JsonParser *self) {
     return NULL;
   }
 
-  char *string = strdup("");
+  StringBuilder *builder = string_builder_new();
   while (self->text[self->offset] != '\0' && self->text[self->offset] != '\"') {
     uint32_t c;
     if (self->text[self->offset] == '\\') {
@@ -99,7 +100,7 @@ static JsonValue *parse_string(JsonParser *self) {
             hex -= 'A';
           } else {
             set_error(self, JSON_PARSER_ERROR_INVALID_STRING_ESCAPE);
-            free(string);
+            string_builder_unref(builder);
             return NULL;
           }
           c = c << 8 | hex;
@@ -108,7 +109,7 @@ static JsonValue *parse_string(JsonParser *self) {
         break;
       default:
         set_error(self, JSON_PARSER_ERROR_INVALID_STRING_ESCAPE);
-        free(string);
+        string_builder_unref(builder);
         return NULL;
       }
     } else {
@@ -116,22 +117,24 @@ static JsonValue *parse_string(JsonParser *self) {
       c = utf8_read_codepoint(self->text + self->offset, &c_length);
       if (c == 0) {
         set_error(self, JSON_PARSER_ERROR_INVALID_CODEPOINT);
-        free(string);
+        string_builder_unref(builder);
         return NULL;
       }
       self->offset += c_length;
     }
-    string = utf8_append_codepoint(string, c);
-    assert(string != NULL);
+    string_builder_append_codepoint(builder, c);
   }
 
   if (!parse_constant(self, "\"")) {
     set_error(self, JSON_PARSER_ERROR_UNTERMINATED_STRING);
-    free(string);
+    string_builder_unref(builder);
     return NULL;
   }
 
-  return json_value_new_string_take(string);
+  JsonValue *value =
+      json_value_new_string_take(string_builder_take_string(builder));
+  string_builder_unref(builder);
+  return value;
 }
 
 static JsonValue *parse_element(JsonParser *self);

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "json_value.h"
+#include "string_builder.h"
 #include "utf8.h"
 
 struct _JsonValue {
@@ -25,41 +26,32 @@ struct _JsonValue {
   } data;
 };
 
-static char *append_string(char *string, char *text) {
-  size_t string_length = strlen(string);
-  size_t text_length = strlen(text);
-  string = realloc(string, string_length + text_length + 1);
-  for (size_t i = 0; i <= text_length; i++) {
-    string[string_length + i] = text[i];
-  }
-  return string;
+static void append_escape(StringBuilder *builder, char escape) {
+  string_builder_append(builder, "\\");
+  string_builder_append_codepoint(builder, escape);
 }
 
-static char *append_escape(char *string, char escape) {
-  string = append_string(string, "\\");
-  return utf8_append_codepoint(string, escape);
-}
-
-static char *append_hex(char *string, uint32_t value) {
+static void append_hex(StringBuilder *builder, uint32_t value) {
   if (value <= 9) {
-    return utf8_append_codepoint(string, '0' + value);
+    string_builder_append_codepoint(builder, '0' + value);
   } else if (value <= 15) {
-    return utf8_append_codepoint(string, 'a' + value - 10);
+    string_builder_append_codepoint(builder, 'a' + value - 10);
   } else {
     assert(false);
   }
 }
 
-static char *append_hex_escape(char *string, uint32_t codepoint) {
-  string = append_string(string, "\\u");
-  string = append_hex(string, (codepoint >> 24) & 0xff);
-  string = append_hex(string, (codepoint >> 16) & 0xff);
-  string = append_hex(string, (codepoint >> 8) & 0xff);
-  return append_hex(string, codepoint & 0xff);
+void append_hex_escape(StringBuilder *builder, uint32_t codepoint) {
+  string_builder_append(builder, "\\u");
+  append_hex(builder, (codepoint >> 24) & 0xff);
+  append_hex(builder, (codepoint >> 16) & 0xff);
+  append_hex(builder, (codepoint >> 8) & 0xff);
+  append_hex(builder, codepoint & 0xff);
 }
 
 static char *string_to_string(const char *string) {
-  char *encoded = strdup("\"");
+  StringBuilder *builder = string_builder_new();
+  string_builder_append(builder, "\"");
 
   size_t offset = 0;
   while (string[offset] != '\0') {
@@ -71,109 +63,121 @@ static char *string_to_string(const char *string) {
     }
 
     if (c == '\"' || c == '\\') {
-      encoded = append_escape(encoded, c);
+      append_escape(builder, c);
     } else if (c == '\b') {
-      encoded = append_escape(encoded, 'b');
+      append_escape(builder, 'b');
     } else if (c == '\f') {
-      encoded = append_escape(encoded, 'f');
+      append_escape(builder, 'f');
     } else if (c == '\n') {
-      encoded = append_escape(encoded, 'n');
+      append_escape(builder, 'n');
     } else if (c == '\r') {
-      encoded = append_escape(encoded, 'r');
+      append_escape(builder, 'r');
     } else if (c == '\t') {
-      encoded = append_escape(encoded, 't');
+      append_escape(builder, 't');
     } else if (c < 0x20) {
-      encoded = append_hex_escape(encoded, c);
+      append_hex_escape(builder, c);
     } else {
-      encoded = utf8_append_codepoint(encoded, c);
+      string_builder_append_codepoint(builder, c);
     }
     offset += length;
   }
 
-  return append_string(encoded, "\"");
+  string_builder_append(builder, "\"");
+
+  char *encoded_string = string_builder_take_string(builder);
+  string_builder_unref(builder);
+  return encoded_string;
 }
 
 static char *object_to_string(size_t length, char **names, JsonValue **values) {
-  char *string = strdup("{");
+  StringBuilder *builder = string_builder_new();
+  string_builder_append(builder, "{");
   for (size_t i = 0; i < length; i++) {
     if (i != 0) {
-      string = append_string(string, ",");
+      string_builder_append(builder, ",");
     }
     char *name_string = string_to_string(names[i]);
     char *value_string = json_value_to_string(values[i]);
-    string = append_string(string, name_string);
-    string = append_string(string, ":");
-    string = append_string(string, value_string);
+    string_builder_append(builder, name_string);
+    string_builder_append(builder, ":");
+    string_builder_append(builder, value_string);
     free(name_string);
     free(value_string);
   }
-  return append_string(string, "}");
+  string_builder_append(builder, "}");
+
+  char *string = string_builder_take_string(builder);
+  string_builder_unref(builder);
+  return string;
 }
 
 static char *array_to_string(size_t length, JsonValue **elements) {
-  char *string = strdup("[");
+  StringBuilder *builder = string_builder_new();
+  string_builder_append(builder, "[");
   for (size_t i = 0; i < length; i++) {
     if (i != 0) {
-      string = append_string(string, ",");
+      string_builder_append(builder, ",");
     }
     char *element_string = json_value_to_string(elements[i]);
-    string = append_string(string, element_string);
+    string_builder_append(builder, element_string);
     free(element_string);
   }
-  return append_string(string, "]");
+  string_builder_append(builder, "]");
+
+  char *string = string_builder_take_string(builder);
+  string_builder_unref(builder);
+  return string;
 }
 
-static char *append_integer(char *string, uint64_t integer) {
+void append_integer(StringBuilder *builder, uint64_t integer) {
   uint64_t divisor = 1;
   while (integer / (divisor * 10) != 0) {
     divisor *= 10;
   }
   do {
     uint64_t digit = integer / divisor;
-    string = append_hex(string, digit);
+    append_hex(builder, digit);
     integer -= digit * divisor;
     divisor /= 10;
   } while (divisor != 0);
-
-  return string;
 }
 
-static char *append_fraction(char *string, double fraction) {
+void append_fraction(StringBuilder *builder, double fraction) {
   if (fraction == 0) {
-    return string;
+    return;
   }
 
-  string = append_string(string, ".");
+  string_builder_append(builder, ".");
   while (fraction != 0.0) {
     uint64_t digit = fraction * 10.0;
-    string = append_hex(string, digit);
+    append_hex(builder, digit);
     fraction = fraction * 10.0 - digit;
   }
-
-  return string;
 }
 
-static char *append_exponent(char *string, uint64_t exponent) {
+void append_exponent(StringBuilder *builder, uint64_t exponent) {
   if (exponent == 0) {
-    return string;
+    return;
   }
 
-  string = append_string(string, "e");
-  return append_integer(string, exponent);
+  string_builder_append(builder, "e");
+  append_integer(builder, exponent);
 }
 
 static char *number_to_string(double number) {
-  char *string = strdup("");
+  StringBuilder *builder = string_builder_new();
   double integer;
   double fraction = modf(number, &integer);
   if (integer < 0) {
-    string = append_string(string, "-");
+    string_builder_append(builder, "-");
     integer = -integer;
   }
-  string = append_integer(string, integer);
-  string = append_fraction(string, fraction);
-  string = append_exponent(string, 0); // FIXME
+  append_integer(builder, integer);
+  append_fraction(builder, fraction);
+  append_exponent(builder, 0); // FIXME
 
+  char *string = string_builder_take_string(builder);
+  string_builder_unref(builder);
   return string;
 }
 
