@@ -1,3 +1,5 @@
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "string_functions.h"
@@ -21,6 +23,31 @@ static size_t match_length(const char *string, const char *string2) {
   return count;
 }
 
+char *string_copy(const char *string) {
+  size_t string_length = string_get_length(string);
+  char *copy = malloc(string_length + 1);
+  for (size_t i = 0; i <= string_length; i++) {
+    copy[i] = string[i];
+  }
+  return copy;
+}
+
+char *string_printf(const char *format, ...) {
+  va_list ap;
+  va_start(ap, format);
+
+  char empty = '\0';
+  va_list ap2;
+  va_copy(ap2, ap);
+  int length = vsnprintf(&empty, 1, format, ap2);
+  va_end(ap2);
+  char *string = malloc(sizeof(char) * (length + 1));
+  vsnprintf(string, length + 1, format, ap);
+  va_end(ap);
+
+  return string;
+}
+
 size_t string_get_length(const char *string) {
   size_t string_length = 0;
   while (string[string_length] != '\0')
@@ -42,15 +69,6 @@ bool string_has_suffix(const char *string, const char *suffix) {
   size_t string_length = string_get_length(string);
   size_t suffix_length = string_get_length(suffix);
   return string_matches(string + string_length - suffix_length, suffix);
-}
-
-char *string_copy(const char *string) {
-  size_t string_length = string_get_length(string);
-  char *copy = malloc(string_length + 1);
-  for (size_t i = 0; i <= string_length; i++) {
-    copy[i] = string[i];
-  }
-  return copy;
 }
 
 char *string_get_prefix(const char *string, size_t end) {

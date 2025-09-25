@@ -8,6 +8,12 @@
 
 // FIXME: Naming
 
+// FIXME: Replace strdup usage
+char *string_copy(const char *string);
+
+char *string_printf(const char *format, ...)
+    __attribute__((format(printf, 1, 2)));
+
 size_t string_get_length(const char *string);
 
 // FIXME: Replace strcmp usage
@@ -16,9 +22,6 @@ bool string_matches(const char *string, const char *string2);
 bool string_has_prefix(const char *string, const char *prefix);
 
 bool string_has_suffix(const char *string, const char *suffix);
-
-// FIXME: Replace strdup usage
-char *string_copy(const char *string);
 
 char *string_get_prefix(const char *string, size_t end);
 

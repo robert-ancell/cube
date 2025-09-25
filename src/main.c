@@ -113,12 +113,14 @@ static void add_mkdir_command(CubeCommandArray *commands, const char *path) {
   StringArray *outputs = string_array_new();
   string_array_append(outputs, path);
 
-  cube_command_array_append_take(commands,
-                                 cube_command_new(inputs, args, outputs));
+  char *label = string_printf("Making directory %s", path);
+  cube_command_array_append_take(
+      commands, cube_command_new(inputs, args, outputs, label));
 
   string_array_unref(inputs);
   string_array_unref(args);
   string_array_unref(outputs);
+  free(label);
 }
 
 static char *get_compile_output(const char *build_dir, const char *input_path) {
@@ -223,24 +225,20 @@ static void add_compile_command(CubeCommandArray *commands,
   StringArray *outputs = string_array_new();
   string_array_append(outputs, output_path);
 
-  cube_command_array_append_take(commands,
-                                 cube_command_new(inputs, args, outputs));
+  char *label = string_printf("Compiling %s", source);
+  cube_command_array_append_take(
+      commands, cube_command_new(inputs, args, outputs, label));
 
   free(output_path);
   string_array_unref(inputs);
   string_array_unref(args);
   string_array_unref(outputs);
+  free(label);
 }
 
 static void runner_command_started(CubeCommandRunner *runner,
                                    CubeCommand *command, void *user_data) {
-  fprintf(stderr, "Building");
-  StringArray *outputs = cube_command_get_outputs(command);
-  size_t outputs_length = string_array_get_length(outputs);
-  for (size_t i = 0; i < outputs_length; i++) {
-    fprintf(stderr, " %s", string_array_get_element(outputs, i));
-  }
-  fprintf(stderr, "...\n");
+  fprintf(stderr, "%s\n", cube_command_get_label(command));
 }
 
 static CubeCommandRunnerCallbacks runner_callbacks = {
@@ -278,6 +276,8 @@ static int do_build() {
 
   for (size_t i = 0; i < programs_length; i++) {
     CubeProgram *program = cube_program_array_get_element(programs, i);
+    const char *binary_name = cube_program_get_name(program);
+
     StringArray *sources = cube_program_get_sources(program);
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
@@ -306,17 +306,19 @@ static int do_build() {
       string_array_append(args, arg);
     }
     string_array_append(args, "-o");
-    string_array_append(args, cube_program_get_name(program));
+    string_array_append(args, binary_name);
 
     StringArray *outputs = string_array_new();
-    string_array_append(outputs, cube_program_get_name(program));
+    string_array_append(outputs, binary_name);
 
-    cube_command_array_append_take(commands,
-                                   cube_command_new(inputs, args, outputs));
+    char *label = string_printf("Linking %s", cube_program_get_name(program));
+    cube_command_array_append_take(
+        commands, cube_command_new(inputs, args, outputs, label));
 
     string_array_unref(inputs);
     string_array_unref(args);
     string_array_unref(outputs);
+    free(label);
   }
 
   CubeCommandRunner *runner =
