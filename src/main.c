@@ -35,27 +35,8 @@ static CubeProject *load_project_from_path(const char *path) {
 
 static CubeProject *load_project() { return load_project_from_path("."); }
 
-static int do_create(int argc, char **argv) {
-  if (argc != 1) {
-    return print_invalid_command_args("create");
-  }
-  const char *name = argv[0];
-
-  CubeProject *project = load_project_from_path(name);
-  if (project != NULL) {
-    fprintf(stderr, "Not creating project \"%s\" - project already exists\n",
-            name);
-    cube_project_unref(project);
-    return 1;
-  }
-
-  char project_path[1024];
-  snprintf(project_path, 1024, "%s/cube.json", name);
-  char source_path[1024];
-  snprintf(source_path, 1024, "%s/src", name);
-  char main_path[1024];
-  snprintf(main_path, 1024, "%s/src/main.c", name);
-
+static int create_project(const char *name, const char *project_path,
+                          const char *source_path, const char *main_path) {
   // FIXME: Handle errors
   mkdir(name, 0777);
   mkdir(source_path, 0777);
@@ -99,6 +80,31 @@ static int do_create(int argc, char **argv) {
          "$ cube build\n",
          name, name);
   return 0;
+}
+
+static int do_create(int argc, char **argv) {
+  if (argc != 1) {
+    return print_invalid_command_args("create");
+  }
+  const char *name = argv[0];
+
+  CubeProject *project = load_project_from_path(name);
+  if (project != NULL) {
+    fprintf(stderr, "Not creating project \"%s\" - project already exists\n",
+            name);
+    cube_project_unref(project);
+    return 1;
+  }
+
+  char *project_path = string_printf("%s/cube.json", name);
+  char *source_path = string_printf("%s/src", name);
+  char *main_path = string_printf("%s/src/main.c", name);
+  int result = create_project(name, project_path, source_path, main_path);
+  free(project_path);
+  free(source_path);
+  free(main_path);
+
+  return result;
 }
 
 static void add_mkdir_command(CubeCommandArray *commands, const char *path) {
@@ -301,9 +307,9 @@ static int do_build() {
     size_t libraries_length = string_array_get_length(libraries);
     for (size_t j = 0; j < libraries_length; j++) {
       const char *library = string_array_get_element(libraries, j);
-      char arg[1024];
-      snprintf(arg, 1024, "-l%s", library);
+      char *arg = string_printf("-l%s", library);
       string_array_append(args, arg);
+      free(arg);
     }
     string_array_append(args, "-o");
     string_array_append(args, binary_name);

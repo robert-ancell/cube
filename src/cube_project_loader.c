@@ -3,6 +3,7 @@
 
 #include "cube_project_loader.h"
 #include "json_parser.h"
+#include "string_functions.h"
 
 struct _CubeProjectLoader {
   CubeProjectLoaderError error;
@@ -74,9 +75,9 @@ static CubeProject *decode_project(JsonParser *parser) {
 }
 
 static void load_project(CubeProjectLoader *self, const char *path) {
-  char project_path[1024];
-  snprintf(project_path, 1024, "%s/cube.json", path);
+  char *project_path = string_printf("%s/cube.json", path);
   FILE *f = fopen(project_path, "r");
+  free(project_path);
   if (f == NULL) {
     self->error = CUBE_PROJECT_LOADER_ERROR_NO_PROJECT;
     return;
