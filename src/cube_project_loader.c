@@ -73,8 +73,10 @@ static CubeProject *decode_project(JsonParser *parser) {
   return project;
 }
 
-static void load_project(CubeProjectLoader *self) {
-  FILE *f = fopen("cube.json", "r");
+static void load_project(CubeProjectLoader *self, const char *path) {
+  char project_path[1024];
+  snprintf(project_path, 1024, "%s/cube.json", path);
+  FILE *f = fopen(project_path, "r");
   if (f == NULL) {
     self->error = CUBE_PROJECT_LOADER_ERROR_NO_PROJECT;
     return;
@@ -92,13 +94,13 @@ static void load_project(CubeProjectLoader *self) {
   }
 }
 
-CubeProjectLoader *cube_project_loader_new() {
+CubeProjectLoader *cube_project_loader_new(const char *path) {
   CubeProjectLoader *self = malloc(sizeof(CubeProjectLoader));
 
   self->error = CUBE_PROJECT_LOADER_ERROR_NONE;
   self->project = NULL;
 
-  load_project(self);
+  load_project(self, path);
 
   return self;
 }

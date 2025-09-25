@@ -10,7 +10,7 @@ typedef enum {
 
 #include "cube_project.h"
 
-CubeProjectLoader *cube_project_loader_new();
+CubeProjectLoader *cube_project_loader_new(const char *path);
 
 CubeProjectLoaderError cube_project_loader_get_error(CubeProjectLoader *self);
 

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "cube_command_runner.h"
 #include "cube_project_loader.h"
@@ -9,8 +10,18 @@
 #include "string_builder.h"
 #include "string_functions.h"
 
-static CubeProject *load_project() {
-  CubeProjectLoader *loader = cube_project_loader_new();
+static int print_no_project_error() {
+  fprintf(stderr, "No Cube project found, see `cube help create`.\n");
+  return 1;
+}
+
+static int print_invalid_command_args(const char *command) {
+  fprintf(stderr, "Invalid arguments, see `cube help %s`.\n", command);
+  return 1;
+}
+
+static CubeProject *load_project_from_path(const char *path) {
+  CubeProjectLoader *loader = cube_project_loader_new(path);
   if (cube_project_loader_get_error(loader) != CUBE_PROJECT_LOADER_ERROR_NONE) {
     return NULL;
   }
@@ -21,17 +32,72 @@ static CubeProject *load_project() {
   return project;
 }
 
+static CubeProject *load_project() { return load_project_from_path("."); }
+
 static int do_create(int argc, char **argv) {
-  CubeProject *project = load_project();
+  if (argc != 1) {
+    return print_invalid_command_args("create");
+  }
+  const char *name = argv[0];
+
+  CubeProject *project = load_project_from_path(name);
   if (project != NULL) {
-    fprintf(stderr, "Not creating project - project already exists\n");
+    fprintf(stderr, "Not creating project \"%s\" - project already exists\n",
+            name);
     cube_project_unref(project);
     return 1;
   }
 
-  printf("FIXME: create\n");
+  char project_path[1024];
+  snprintf(project_path, 1024, "%s/cube.json", name);
+  char source_path[1024];
+  snprintf(source_path, 1024, "%s/src", name);
+  char main_path[1024];
+  snprintf(main_path, 1024, "%s/src/main.c", name);
 
-  return 1;
+  // FIXME: Handle errors
+  mkdir(name, 0777);
+  mkdir(source_path, 0777);
+
+  FILE *f = fopen(project_path, "w");
+  if (f == NULL) {
+    fprintf(stderr, "Unable to create project file in %s\n", project_path);
+    return 1;
+  }
+  fprintf(f,
+          "{\n"
+          "  \"programs\": [\n"
+          "    {\n"
+          "      \"name\": \"%s\",\n"
+          "      \"sources\": [\n"
+          "        \"src/main.c\"\n"
+          "      ]\n"
+          "    }\n"
+          "  ]\n"
+          "}\n",
+          name);
+  fclose(f);
+
+  f = fopen(main_path, "w");
+  if (f == NULL) {
+    fprintf(stderr, "Unable to create source file in %s\n", main_path);
+    return 1;
+  }
+  fprintf(f, "#include <stdio.h>\n"
+             "\n"
+             "int main(int argc, char **argv) {\n"
+             "  printf(\"Hello world!\\n\");\n"
+             "  return 0;\n"
+             "}\n");
+  fclose(f);
+
+  printf("Created project \"%s\"\n"
+         "\n"
+         "To build, run:\n"
+         "$ cd %s\n"
+         "$ cube build\n",
+         name, name);
+  return 0;
 }
 
 static CubeCommand **add_command_take(CubeCommand **commands,
@@ -112,16 +178,6 @@ static CubeCommand **add_compile_command(CubeCommand **commands,
   string_array_unref(outputs);
 
   return commands;
-}
-
-static int print_no_project_error() {
-  fprintf(stderr, "No Cube project found, see `cube help create`.\n");
-  return 1;
-}
-
-static int print_invalid_command_args(const char *command) {
-  fprintf(stderr, "Invalid arguments, see `cube help %s`.\n", command);
-  return 1;
 }
 
 static int do_build() {
@@ -209,6 +265,8 @@ static int do_build() {
     cube_command_unref(commands[i]);
   }
   free(commands);
+
+  // FIXME: Show complete message
 
   return 1;
 }
