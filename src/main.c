@@ -187,6 +187,47 @@ static void add_depends(StringArray *inputs, const char *build_dir,
   }
 }
 
+/// `true` if [t2] is later than [t1].
+static bool is_later(struct timespec *t1, struct timespec *t2) {
+  return t2->tv_sec > t1->tv_sec ||
+         (t2->tv_sec == t1->tv_sec && t2->tv_nsec > t1->tv_nsec);
+}
+
+// FIXME: Will fail if inputs are modified during build. Either check after
+// build or use file hashes or similar.
+static bool needs_building(StringArray *inputs, StringArray *outputs) {
+  struct timespec youngest_input_time = {};
+  size_t inputs_length = string_array_get_length(inputs);
+  for (size_t i = 0; i < inputs_length; i++) {
+    const char *input = string_array_get_element(inputs, i);
+    struct stat info;
+    if (stat(input, &info) != 0) {
+      // Input missing - build to get error.
+      return true;
+    }
+    if (is_later(&youngest_input_time, &info.st_mtim)) {
+      youngest_input_time = info.st_mtim;
+    }
+  }
+
+  size_t outputs_length = string_array_get_length(outputs);
+  for (size_t i = 0; i < outputs_length; i++) {
+    const char *output = string_array_get_element(outputs, i);
+    struct stat info;
+    if (stat(output, &info) != 0) {
+      // Output missing - build.
+      return true;
+    }
+    if (is_later(&info.st_mtim, &youngest_input_time)) {
+      // There is an input newer than this output - rebuild.
+      return true;
+    }
+  }
+
+  // All outputs newer than inputs, no build required.
+  return false;
+}
+
 static void add_compile_command(CubeCommandArray *commands,
                                 const char *build_dir, const char *source) {
   char *output_path = get_compile_output(build_dir, source);
@@ -209,15 +250,17 @@ static void add_compile_command(CubeCommandArray *commands,
   StringArray *outputs = string_array_new();
   string_array_append(outputs, output_path);
 
-  char *label = string_printf("Compiling %s", source);
-  cube_command_array_append_take(
-      commands, cube_command_new(inputs, args, outputs, label));
+  if (needs_building(inputs, outputs)) {
+    char *label = string_printf("Compiling %s", source);
+    cube_command_array_append_take(
+        commands, cube_command_new(inputs, args, outputs, label));
+    free(label);
+  }
 
   free(output_path);
   string_array_unref(inputs);
   string_array_unref(args);
   string_array_unref(outputs);
-  free(label);
 }
 
 static void runner_command_started(CubeCommandRunner *runner,
@@ -311,14 +354,16 @@ static int do_build() {
     StringArray *outputs = string_array_new();
     string_array_append(outputs, binary_name);
 
-    char *label = string_printf("Linking %s", cube_program_get_name(program));
-    cube_command_array_append_take(
-        commands, cube_command_new(inputs, args, outputs, label));
+    if (needs_building(inputs, outputs)) {
+      char *label = string_printf("Linking %s", cube_program_get_name(program));
+      cube_command_array_append_take(
+          commands, cube_command_new(inputs, args, outputs, label));
+      free(label);
+    }
 
     string_array_unref(inputs);
     string_array_unref(args);
     string_array_unref(outputs);
-    free(label);
   }
 
   CubeCommandRunner *runner =
