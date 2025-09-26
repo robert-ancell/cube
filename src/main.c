@@ -112,9 +112,11 @@ static char *get_compile_output(const char *build_dir, const char *input_path) {
   StringBuilder *builder = string_builder_new();
   string_builder_append(builder, build_dir);
   string_builder_append(builder, "/");
-  string_builder_append(builder, input_path);
+  char *base = string_slice(input_path, 0, -2);
+  string_builder_append(builder, base);
+  free(base);
+  string_builder_append(builder, ".bc");
   char *output_path = string_builder_take_string(builder);
-  output_path[string_get_length(output_path) - 1] = 'o';
   string_builder_unref(builder);
   return output_path;
 }
@@ -242,6 +244,7 @@ static void add_compile_command(CubeCommandArray *commands,
   string_array_append(args, "-g");
   string_array_append(args, "-Wall");
   string_array_append(args, "-c");
+  string_array_append(args, "-flto");
   string_array_append(args, source);
   string_array_append(args, "-o");
   string_array_append(args, output_path);
