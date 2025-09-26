@@ -417,7 +417,36 @@ static int do_format() {
     return print_no_project_error();
   }
 
-  printf("FIXME: format\n");
+  StringArray *args = string_array_new();
+  string_array_append(args, "clang-format");
+  string_array_append(args, "-i");
+  CubeProgramArray *programs = cube_project_get_programs(project);
+  size_t programs_length = cube_program_array_get_length(programs);
+  for (size_t i = 0; i < programs_length; i++) {
+    CubeProgram *program = cube_program_array_get_element(programs, i);
+    StringArray *sources = cube_program_get_sources(program);
+    size_t sources_length = string_array_get_length(sources);
+    for (size_t j = 0; j < sources_length; j++) {
+      const char *source = string_array_get_element(sources, j);
+      string_array_append(args, source);
+    }
+  }
+
+  CubeCommandArray *commands = cube_command_array_new();
+  StringArray *inputs = string_array_new();
+  StringArray *outputs = string_array_new();
+  cube_command_array_append_take(
+      commands, cube_command_new(inputs, args, outputs, "Formatting sources"));
+  string_array_unref(inputs);
+  string_array_unref(args);
+  string_array_unref(outputs);
+
+  CubeCommandRunner *runner =
+      cube_command_runner_new(commands, &runner_callbacks, NULL);
+  cube_command_array_unref(commands);
+  cube_command_runner_run(runner);
+
+  // FIXME: Print summary of what was formatted
 
   cube_project_unref(project);
 
