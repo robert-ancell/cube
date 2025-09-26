@@ -107,28 +107,6 @@ static int do_create(int argc, char **argv) {
   return result;
 }
 
-static void add_mkdir_command(CubeCommandArray *commands, const char *path) {
-  StringArray *inputs = string_array_new();
-
-  StringArray *args = string_array_new();
-  // string_array_append(args, "echo");
-  string_array_append(args, "mkdir");
-  string_array_append(args, "-p");
-  string_array_append(args, path);
-
-  StringArray *outputs = string_array_new();
-  string_array_append(outputs, path);
-
-  char *label = string_printf("Making directory %s", path);
-  cube_command_array_append_take(
-      commands, cube_command_new(inputs, args, outputs, label));
-
-  string_array_unref(inputs);
-  string_array_unref(args);
-  string_array_unref(outputs);
-  free(label);
-}
-
 static char *get_compile_output(const char *build_dir, const char *input_path) {
   assert(string_has_suffix(input_path, ".c"));
   StringBuilder *builder = string_builder_new();
@@ -250,6 +228,19 @@ static void runner_command_started(CubeCommandRunner *runner,
 static CubeCommandRunnerCallbacks runner_callbacks = {
     .command_started = runner_command_started};
 
+static void add_directory(StringArray *directories, const char *path) {
+  if (string_array_contains(directories, path)) {
+    return;
+  }
+
+  char *parent = path_get_directory(path);
+  if (parent != NULL) {
+    add_directory(directories, parent);
+  }
+  free(parent);
+  string_array_append(directories, path);
+}
+
 static int do_build() {
   CubeProject *project = load_project();
   if (project == NULL) {
@@ -271,14 +262,17 @@ static int do_build() {
       const char *source = string_array_get_element(sources, j);
       char *output_path = get_compile_output(build_dir, source);
       char *output_dir = path_get_directory(output_path);
-      if (!string_array_contains(output_dirs, output_dir)) {
-        string_array_append(output_dirs, output_dir);
-        add_mkdir_command(commands, output_dir);
-      }
+      add_directory(output_dirs, output_dir);
       free(output_path);
       free(output_dir);
     }
   }
+  size_t output_dirs_length = string_array_get_length(output_dirs);
+  for (size_t i = 0; i < output_dirs_length; i++) {
+    const char *path = string_array_get_element(output_dirs, i);
+    mkdir(path, 0777);
+  }
+  string_array_unref(output_dirs);
 
   for (size_t i = 0; i < programs_length; i++) {
     CubeProgram *program = cube_program_array_get_element(programs, i);
