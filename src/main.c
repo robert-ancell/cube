@@ -237,8 +237,7 @@ static void add_compile_command(CubeCommandArray *commands,
   add_depends(inputs, build_dir, source);
 
   StringArray *args = string_array_new();
-  // string_array_append(args, "echo");
-  string_array_append(args, "gcc");
+  string_array_append(args, "clang");
   string_array_append(args, "-MMD");
   string_array_append(args, "-g");
   string_array_append(args, "-Wall");
@@ -334,8 +333,7 @@ static int do_build() {
     }
 
     StringArray *args = string_array_new();
-    // string_array_append(args, "echo");
-    string_array_append(args, "gcc");
+    string_array_append(args, "clang");
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
       string_array_append_take(args, get_compile_output(build_dir, source));
