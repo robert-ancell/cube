@@ -1,6 +1,6 @@
 {
-  "imports": {
-    "json": {
+  "imports": [
+    {
        "github": "robert-ancell/cube-json",
        "url": "https://github.com/robert-ancell/cube.git",
        "path": "./packages/cube-json",
@@ -9,7 +9,7 @@
          "json"
        ]
     }
-  },
+  ],
 
   "modules": [
     {
