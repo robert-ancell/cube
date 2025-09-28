@@ -82,7 +82,7 @@ static void load_project(CubeProjectLoader *self, const char *path) {
     self->error = CUBE_PROJECT_LOADER_ERROR_NO_PROJECT;
     return;
   }
-  char data[1024];
+  char data[4096];
   size_t n_read = fread(data, 1, sizeof(data) - 1, f);
   data[n_read] = '\0';
   fclose(f);

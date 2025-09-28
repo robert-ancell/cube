@@ -1,12 +1,25 @@
 {
-  "dependencies": {
+  "imports": {
     "json": {
        "github": "robert-ancell/cube-json",
        "url": "https://github.com/robert-ancell/cube.git",
        "path": "./packages/cube-json",
-       "ref": "main"
+       "ref": "main",
+       "modules": [
+         "json"
+       ]
     }
   },
+
+  "modules": [
+    {
+      "name": "json",
+      "sources": [
+        "modules/json/json_parser.c",
+        "modules/json/json_value.c"
+      ]
+    }
+  ],
 
   "programs": [
     {
@@ -30,13 +43,7 @@
         "src/utf8.c"
       ],
       "defines": { "FOO": "BAR" },
-      "libraries": [ "m" ],
-      "dependencies": [
-        {
-          "url": "https://github.com/robert-ancell/cube.git",
-          "ref": "0.1"
-        }
-      ]
+      "libraries": [ "m" ]
     }
   ]
 }
