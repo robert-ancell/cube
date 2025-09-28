@@ -240,6 +240,8 @@ static void add_compile_command(CubeCommandArray *commands,
 
   StringArray *args = string_array_new();
   string_array_append(args, "clang");
+  string_array_append(args, "-std=gnu23");
+  string_array_append(args, "-O3");
   string_array_append(args, "-MMD");
   string_array_append(args, "-g");
   string_array_append(args, "-Wall");
@@ -337,6 +339,8 @@ static int do_build() {
 
     StringArray *args = string_array_new();
     string_array_append(args, "clang");
+    string_array_append(args, "-std=gnu23");
+    string_array_append(args, "-O3");
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
       string_array_append_take(args, get_compile_output(build_dir, source));
