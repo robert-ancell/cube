@@ -42,6 +42,9 @@
         "src/string_functions.c",
         "src/utf8.c"
       ],
+      "modules": [
+        "json"
+      ],
       "defines": { "FOO": "BAR" },
       "libraries": [ "m" ]
     }
