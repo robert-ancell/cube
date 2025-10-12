@@ -197,7 +197,10 @@ static bool is_later(struct timespec *t1, struct timespec *t2) {
 
 // FIXME: Will fail if inputs are modified during build. Either check after
 // build or use file hashes or similar.
-static bool needs_building(StringArray *inputs, StringArray *outputs) {
+static bool needs_building(CubeCommand *command) {
+  StringArray *inputs = cube_command_get_inputs(command);
+  StringArray *outputs = cube_command_get_outputs(command);
+
   struct timespec youngest_input_time = {};
   size_t inputs_length = string_array_get_length(inputs);
   for (size_t i = 0; i < inputs_length; i++) {
@@ -254,17 +257,15 @@ static void add_compile_command(CubeCommandArray *commands,
   StringArray *outputs = string_array_new();
   string_array_append(outputs, output_path);
 
-  if (needs_building(inputs, outputs)) {
-    char *label = string_printf("Compiling %s", source);
-    cube_command_array_append_take(
-        commands, cube_command_new(inputs, args, outputs, label));
-    free(label);
+  CubeCommand *command = cube_command_new_take(
+      inputs, args, outputs, string_printf("Compiling %s", source));
+  if (needs_building(command)) {
+    cube_command_array_append_take(commands, command);
+  } else {
+    cube_command_unref(command);
   }
 
   free(output_path);
-  string_array_unref(inputs);
-  string_array_unref(args);
-  string_array_unref(outputs);
 }
 
 static void runner_command_started(CubeCommandRunner *runner,
@@ -359,16 +360,14 @@ static int do_build() {
     StringArray *outputs = string_array_new();
     string_array_append(outputs, binary_name);
 
-    if (needs_building(inputs, outputs)) {
-      char *label = string_printf("Linking %s", cube_program_get_name(program));
-      cube_command_array_append_take(
-          commands, cube_command_new(inputs, args, outputs, label));
-      free(label);
+    CubeCommand *command = cube_command_new_take(
+        inputs, args, outputs,
+        string_printf("Linking %s", cube_program_get_name(program)));
+    if (needs_building(command)) {
+      cube_command_array_append_take(commands, command);
+    } else {
+      cube_command_unref(command);
     }
-
-    string_array_unref(inputs);
-    string_array_unref(args);
-    string_array_unref(outputs);
   }
 
   CubeCommandRunner *runner =
@@ -441,10 +440,8 @@ static int do_format() {
   StringArray *inputs = string_array_new();
   StringArray *outputs = string_array_new();
   cube_command_array_append_take(
-      commands, cube_command_new(inputs, args, outputs, "Formatting sources"));
-  string_array_unref(inputs);
-  string_array_unref(args);
-  string_array_unref(outputs);
+      commands, cube_command_new_take(inputs, args, outputs,
+                                      string_copy("Formatting sources")));
 
   CubeCommandRunner *runner =
       cube_command_runner_new(commands, &runner_callbacks, NULL);

@@ -7,6 +7,9 @@ typedef struct _CubeCommand CubeCommand;
 CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
                               StringArray *outputs, const char *label);
 
+CubeCommand *cube_command_new_take(StringArray *inputs, StringArray *args,
+                              StringArray *outputs, char *label);
+
 StringArray *cube_command_get_inputs(CubeCommand *self);
 
 StringArray *cube_command_get_args(CubeCommand *self);

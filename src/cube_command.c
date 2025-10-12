@@ -13,13 +13,19 @@ struct _CubeCommand {
 
 CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
                               StringArray *outputs, const char *label) {
+  return cube_command_new_take(string_array_ref(inputs), string_array_ref(args),
+                               string_array_ref(outputs), string_copy(label));
+}
+
+CubeCommand *cube_command_new_take(StringArray *inputs, StringArray *args,
+                                   StringArray *outputs, char *label) {
   CubeCommand *self = malloc(sizeof(CubeCommand));
 
   self->ref = 1;
-  self->inputs = string_array_ref(inputs);
-  self->args = string_array_ref(args);
-  self->outputs = string_array_ref(outputs);
-  self->label = string_copy(label);
+  self->inputs = inputs;
+  self->args = args;
+  self->outputs = outputs;
+  self->label = label;
 
   return self;
 }
