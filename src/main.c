@@ -295,7 +295,7 @@ static int do_build() {
     return print_no_project_error();
   }
 
-  char *build_dir = string_copy(".cube/build");
+  const char *build_dir = ".cube/build";
 
   CubeProgramArray *programs = cube_project_get_programs(project);
   CubeCommandArray *commands = cube_command_array_new();
