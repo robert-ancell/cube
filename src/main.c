@@ -455,7 +455,7 @@ static int do_format() {
 
   cube_project_unref(project);
 
-  return 1;
+  return 0;
 }
 
 static int do_clean() {
