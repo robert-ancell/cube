@@ -375,18 +375,21 @@ static int do_build() {
   cube_command_array_unref(commands);
   cube_command_runner_run(runner);
 
+  int return_value = 0;
   if (cube_command_runner_get_error(runner) == CUBE_COMMAND_RUNNER_ERROR_NONE) {
     for (size_t i = 0; i < programs_length; i++) {
       CubeProgram *program = cube_program_array_get_element(programs, i);
       fprintf(stderr, "Build complete, run with `./%s`\n",
               cube_program_get_name(program));
     }
+  } else {
+    return_value = 1;
   }
 
   cube_project_unref(project);
   cube_command_runner_unref(runner);
 
-  return 1;
+  return return_value;
 }
 
 static int do_test() {
