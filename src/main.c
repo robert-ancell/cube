@@ -289,7 +289,11 @@ static void add_directory(StringArray *directories, const char *path) {
   string_array_append(directories, path);
 }
 
-static int do_build() {
+static int do_build(int argc, char **argv) {
+  if (argc != 0) {
+    return print_invalid_command_args("build");
+  }
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -392,7 +396,11 @@ static int do_build() {
   return return_value;
 }
 
-static int do_test() {
+static int do_test(int argc, char **argv) {
+  if (argc != 0) {
+    return print_invalid_command_args("test");
+  }
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -405,7 +413,11 @@ static int do_test() {
   return 1;
 }
 
-static int do_document() {
+static int do_document(int argc, char **argv) {
+  if (argc != 0) {
+    return print_invalid_command_args("document");
+  }
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -418,7 +430,11 @@ static int do_document() {
   return 1;
 }
 
-static int do_format() {
+static int do_format(int argc, char **argv) {
+  if (argc != 0) {
+    return print_invalid_command_args("format");
+  }
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -458,7 +474,11 @@ static int do_format() {
   return 0;
 }
 
-static int do_clean() {
+static int do_clean(int argc, char **argv) {
+  if (argc != 0) {
+    return print_invalid_command_args("clean");
+  }
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -541,15 +561,15 @@ int main(int argc, char **argv) {
   if (string_matches(command, "create")) {
     return do_create(command_argc, command_argv);
   } else if (string_matches(command, "build")) {
-    return do_build();
+    return do_build(command_argc, command_argv);
   } else if (string_matches(command, "test")) {
-    return do_test();
+    return do_test(command_argc, command_argv);
   } else if (string_matches(command, "document")) {
-    return do_document();
+    return do_document(command_argc, command_argv);
   } else if (string_matches(command, "format")) {
-    return do_format();
+    return do_format(command_argc, command_argv);
   } else if (string_matches(command, "clean")) {
-    return do_clean();
+    return do_clean(command_argc, command_argv);
   } else if (string_matches(command, "help")) {
     return do_help(command_argc, command_argv);
   } else {
