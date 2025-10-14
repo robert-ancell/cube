@@ -7,16 +7,18 @@ struct _CubeProgram {
   int ref;
   char *name;
   StringArray *sources;
+  StringArray *modules;
   StringArray *libraries;
 };
 
 CubeProgram *cube_program_new(const char *name, StringArray *sources,
-                              StringArray *libraries) {
+                              StringArray *modules, StringArray *libraries) {
   CubeProgram *self = malloc(sizeof(CubeProgram));
 
   self->ref = 1;
   self->name = strdup(name);
   self->sources = string_array_ref(sources);
+  self->modules = string_array_ref(modules);
   self->libraries = string_array_ref(libraries);
 
   return self;
@@ -26,6 +28,10 @@ const char *cube_program_get_name(CubeProgram *self) { return self->name; }
 
 StringArray *cube_program_get_sources(CubeProgram *self) {
   return self->sources;
+}
+
+StringArray *cube_program_get_modules(CubeProgram *self) {
+  return self->modules;
 }
 
 StringArray *cube_program_get_libraries(CubeProgram *self) {
@@ -44,6 +50,7 @@ void cube_program_unref(CubeProgram *self) {
 
   free(self->name);
   string_array_unref(self->sources);
+  string_array_unref(self->modules);
   string_array_unref(self->libraries);
   free(self);
 }

@@ -262,6 +262,18 @@ JsonValue *json_value_get_member(JsonValue *self, const char *name) {
   return NULL;
 }
 
+const char *json_value_get_member_name(JsonValue *self, size_t index) {
+  assert(self->type == JSON_VALUE_TYPE_OBJECT);
+  assert(index < self->data.object.length);
+  return self->data.object.names[index];
+}
+
+JsonValue *json_value_get_member_value(JsonValue *self, size_t index) {
+  assert(self->type == JSON_VALUE_TYPE_OBJECT);
+  assert(index < self->data.object.length);
+  return self->data.object.values[index];
+}
+
 JsonValue *json_value_get_object_member(JsonValue *self, const char *name) {
   JsonValue *value = json_value_get_member(self, name);
   if (value == NULL) {
@@ -356,8 +368,10 @@ bool json_value_get_boolean_member(JsonValue *self, const char *name,
 }
 
 size_t json_value_get_length(JsonValue *self) {
-  assert(self->type == JSON_VALUE_TYPE_ARRAY);
-  return self->data.array.length;
+  assert(self->type == JSON_VALUE_TYPE_ARRAY ||
+         self->type == JSON_VALUE_TYPE_OBJECT);
+  return self->type == JSON_VALUE_TYPE_ARRAY ? self->data.array.length
+                                             : self->data.object.length;
 }
 
 JsonValue *json_value_get_element(JsonValue *self, size_t index) {

@@ -7,6 +7,12 @@ project = json.load(open("cube.json"))
 for program in project["programs"]:
     if program["name"] == "cube":
         command = ["gcc", "-g", "-Wall"]
+        for module_name in program["modules"]:
+            module = project["modules"][module_name]
+            for source in module["sources"]:
+                command.append(source)
+            for dir in module["include-directories"]:
+                command.append("-I" + dir)
         for source in program["sources"]:
             command.append(source)
         for library in program["libraries"]:

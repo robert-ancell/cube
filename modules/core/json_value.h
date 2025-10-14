@@ -38,6 +38,10 @@ JsonValueType json_value_get_type(JsonValue *self);
 /// Returns `NULL` if this member is not present.
 JsonValue *json_value_get_member(JsonValue *self, const char *name);
 
+const char *json_value_get_member_name(JsonValue *self, size_t index);
+
+JsonValue *json_value_get_member_value(JsonValue *self, size_t index);
+
 /// Gets an object member with [name] from this object.
 /// Returns `NULL` if this member is not present or is not an object.
 JsonValue *json_value_get_object_member(JsonValue *self, const char *name);
