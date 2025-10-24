@@ -10,27 +10,25 @@ struct _CubeProjectLoader {
   CubeProject *project;
 };
 
+static StringArray *get_optional_string_array(JsonValue *value,
+                                              const char *name) {
+  StringArray *member = json_value_get_string_array_member(value, name);
+  if (member == NULL) {
+    member = string_array_new();
+  }
+  return member;
+}
+
 static CubeProgram *decode_program(JsonValue *program_object) {
   if (json_value_get_type(program_object) != JSON_VALUE_TYPE_OBJECT) {
     return NULL;
   }
 
   const char *name = json_value_get_string_member(program_object, "name", "");
-  StringArray *sources =
-      json_value_get_string_array_member(program_object, "sources");
-  if (sources == NULL) {
-    sources = string_array_new();
-  }
-  StringArray *modules =
-      json_value_get_string_array_member(program_object, "modules");
-  if (modules == NULL) {
-    modules = string_array_new();
-  }
+  StringArray *sources = get_optional_string_array(program_object, "sources");
+  StringArray *modules = get_optional_string_array(program_object, "modules");
   StringArray *libraries =
-      json_value_get_string_array_member(program_object, "libraries");
-  if (libraries == NULL) {
-    libraries = string_array_new();
-  }
+      get_optional_string_array(program_object, "libraries");
 
   CubeProgram *program = cube_program_new(name, sources, modules, libraries);
   string_array_unref(sources);
@@ -64,19 +62,15 @@ static CubeModule *decode_module(const char *name, JsonValue *module_object) {
     return NULL;
   }
 
-  StringArray *sources =
-      json_value_get_string_array_member(module_object, "sources");
-  if (sources == NULL) {
-    sources = string_array_new();
-  }
+  StringArray *sources = get_optional_string_array(module_object, "sources");
+  StringArray *modules = get_optional_string_array(module_object, "modules");
   StringArray *include_directories =
-      json_value_get_string_array_member(module_object, "include-directories");
-  if (include_directories == NULL) {
-    include_directories = string_array_new();
-  }
+      get_optional_string_array(module_object, "include-directories");
 
-  CubeModule *module = cube_module_new(name, sources, include_directories);
+  CubeModule *module =
+      cube_module_new(name, sources, modules, include_directories);
   string_array_unref(sources);
+  string_array_unref(modules);
   string_array_unref(include_directories);
   return module;
 }
@@ -115,14 +109,13 @@ static CubeProject *decode_project(JsonParser *parser) {
   CubeProgramArray *programs =
       decode_programs(json_value_get_member(project_object, "programs"));
   if (programs == NULL) {
-    return NULL;
+    programs = cube_program_array_new();
   }
 
   CubeModuleArray *modules =
       decode_modules(json_value_get_member(project_object, "modules"));
   if (modules == NULL) {
-    cube_program_array_unref(programs);
-    return NULL;
+    modules = cube_module_array_new();
   }
 
   CubeProject *project = cube_project_new(programs, modules);

@@ -305,6 +305,86 @@ static void add_compile_directory(StringArray *directories,
   free(output_dir);
 }
 
+static void add_module_modules(CubeProject *project, CubeModule *module,
+                               StringArray *all_module_names,
+                               CubeModuleArray *all_modules);
+
+static void add_module(CubeProject *project, const char *module_name,
+                       StringArray *all_module_names,
+                       CubeModuleArray *all_modules) {
+  if (string_array_contains(all_module_names, module_name)) {
+    return;
+  }
+
+  CubeModule *module = cube_project_get_module(project, module_name);
+  if (module == NULL) {
+    return;
+  }
+
+  string_array_append(all_module_names, module_name);
+  cube_module_array_append(all_modules, module);
+  add_module_modules(project, module, all_module_names, all_modules);
+}
+
+static void add_modules(CubeProject *project, StringArray *module_names,
+                        StringArray *all_module_names,
+                        CubeModuleArray *all_modules) {
+  size_t module_names_length = string_array_get_length(module_names);
+  for (size_t i = 0; i < module_names_length; i++) {
+    const char *module_name = string_array_get_element(module_names, i);
+    add_module(project, module_name, all_module_names, all_modules);
+  }
+}
+
+// Recursively add module depdencies to [all_module_names]
+static void add_module_modules(CubeProject *project, CubeModule *module,
+                               StringArray *all_module_names,
+                               CubeModuleArray *all_modules) {
+  add_modules(project, cube_module_get_modules(module), all_module_names,
+              all_modules);
+}
+
+// Get all the modules this program uses (including dependencies).
+static CubeModuleArray *get_program_modules(CubeProject *project,
+                                            CubeProgram *program) {
+  StringArray *all_module_names = string_array_new();
+  CubeModuleArray *all_modules = cube_module_array_new();
+  add_modules(project, cube_program_get_modules(program), all_module_names,
+              all_modules);
+  string_array_unref(all_module_names);
+  return all_modules;
+}
+
+// Get all the modules this module uses (including dependencies)
+static CubeModuleArray *get_module_modules(CubeProject *project,
+                                           CubeModule *module) {
+  StringArray *all_module_names = string_array_new();
+  CubeModuleArray *all_modules = cube_module_array_new();
+  add_module_modules(project, module, all_module_names, all_modules);
+  string_array_unref(all_module_names);
+  return all_modules;
+}
+
+// Get all the include directories required for the given modules
+static StringArray *get_module_include_directories(CubeModuleArray *modules) {
+  StringArray *include_directories = string_array_new();
+  size_t modules_length = cube_module_array_get_length(modules);
+  for (size_t i = 0; i < modules_length; i++) {
+    CubeModule *module = cube_module_array_get_element(modules, i);
+    StringArray *module_include_directories =
+        cube_module_get_include_directories(module);
+    size_t module_include_directories_length =
+        string_array_get_length(module_include_directories);
+    for (size_t l = 0; l < module_include_directories_length; l++) {
+      string_array_append(
+          include_directories,
+          string_array_get_element(module_include_directories, l));
+    }
+  }
+
+  return include_directories;
+}
+
 static int do_build(int argc, char **argv) {
   if (argc != 0) {
     return print_invalid_command_args("build");
@@ -325,14 +405,10 @@ static int do_build(int argc, char **argv) {
   for (size_t i = 0; i < programs_length; i++) {
     CubeProgram *program = cube_program_array_get_element(programs, i);
 
-    StringArray *modules = cube_program_get_modules(program);
-    size_t modules_length = string_array_get_length(modules);
+    CubeModuleArray *modules = get_program_modules(project, program);
+    size_t modules_length = cube_module_array_get_length(modules);
     for (size_t j = 0; j < modules_length; j++) {
-      const char *module_name = string_array_get_element(modules, j);
-      CubeModule *module = cube_project_get_module(project, module_name);
-      if (module == NULL) {
-        continue;
-      }
+      CubeModule *module = cube_module_array_get_element(modules, j);
       StringArray *module_sources = cube_module_get_sources(module);
       size_t module_sources_length = string_array_get_length(module_sources);
       for (size_t k = 0; k < module_sources_length; k++) {
@@ -347,6 +423,8 @@ static int do_build(int argc, char **argv) {
       const char *source = string_array_get_element(sources, j);
       add_compile_directory(output_dirs, build_dir, source);
     }
+
+    cube_module_array_unref(modules);
   }
   size_t output_dirs_length = string_array_get_length(output_dirs);
   for (size_t i = 0; i < output_dirs_length; i++) {
@@ -362,31 +440,31 @@ static int do_build(int argc, char **argv) {
     StringArray *all_sources = string_array_new();
     StringArray *inputs = string_array_new();
 
-    StringArray *modules = cube_program_get_modules(program);
-    size_t modules_length = string_array_get_length(modules);
+    CubeModuleArray *modules = get_program_modules(project, program);
+    size_t modules_length = cube_module_array_get_length(modules);
     StringArray *include_directories = string_array_new();
     for (size_t j = 0; j < modules_length; j++) {
-      const char *module_name = string_array_get_element(modules, j);
-      CubeModule *module = cube_project_get_module(project, module_name);
-      if (module == NULL) {
-        fprintf(stderr, "Module \"%s\" not found\n", module_name);
-        continue;
-      }
+      CubeModule *module = cube_module_array_get_element(modules, j);
+
+      CubeModuleArray *module_modules = get_module_modules(project, module);
+      StringArray *module_source_include_directories =
+          get_module_include_directories(module_modules);
+      cube_module_array_unref(module_modules);
+
       StringArray *module_sources = cube_module_get_sources(module);
       size_t module_sources_length = string_array_get_length(module_sources);
       for (size_t k = 0; k < module_sources_length; k++) {
         const char *module_source = string_array_get_element(module_sources, k);
 
-        StringArray *module_include_directories = string_array_new();
-        add_compile_command(commands, module_include_directories, build_dir,
-                            module_source);
-        string_array_unref(module_include_directories);
+        add_compile_command(commands, module_source_include_directories,
+                            build_dir, module_source);
 
         string_array_append_take(inputs,
                                  get_compile_output(build_dir, module_source));
 
         string_array_append(all_sources, module_source);
       }
+      string_array_unref(module_source_include_directories);
 
       StringArray *module_include_directories =
           cube_module_get_include_directories(module);
@@ -439,6 +517,8 @@ static int do_build(int argc, char **argv) {
     } else {
       cube_command_unref(command);
     }
+
+    cube_module_array_unref(modules);
   }
 
   CubeCommandRunner *runner =

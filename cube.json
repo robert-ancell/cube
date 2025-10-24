@@ -14,8 +14,6 @@
   "modules": {
     "core": {
       "sources": [
-        "modules/core/json_parser.c",
-        "modules/core/json_value.c",
         "modules/core/path_functions.c",
         "modules/core/pointer_array.c",
         "modules/core/string_array.c",
@@ -25,6 +23,18 @@
       ],
       "include-directories": [
         "modules/core"
+      ]
+    },
+    "json": {
+      "sources": [
+        "modules/json/json_parser.c",
+        "modules/json/json_value.c"
+      ],
+      "modules": [
+        "core"
+      ],
+      "include-directories": [
+        "modules/json"
       ]
     }
   },
@@ -45,7 +55,8 @@
         "src/main.c"
       ],
       "modules": [
-        "core"
+        "core",
+        "json"
       ],
       "defines": { "FOO": "BAR" },
       "libraries": [ "m" ]
