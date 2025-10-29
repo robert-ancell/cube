@@ -5,9 +5,9 @@ typedef struct _PointerArray PointerArray;
 PointerArray *pointer_array_new(void *(*ref_function)(void *),
                                 void (*unref_function)(void *));
 
-void pointer_array_append(PointerArray *self, void *pointer);
+void pointer_array_append(PointerArray *self, void *element);
 
-void pointer_array_append_take(PointerArray *self, void *pointer);
+void pointer_array_append_take(PointerArray *self, void *element);
 
 size_t pointer_array_get_length(PointerArray *self);
 
