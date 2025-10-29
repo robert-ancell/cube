@@ -8,7 +8,7 @@ CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
                               StringArray *outputs, const char *label);
 
 CubeCommand *cube_command_new_take(StringArray *inputs, StringArray *args,
-                              StringArray *outputs, char *label);
+                                   StringArray *outputs, char *label);
 
 StringArray *cube_command_get_inputs(CubeCommand *self);
 

@@ -8,8 +8,7 @@ CubeModuleArray *cube_module_array_new();
 
 void cube_module_array_append(CubeModuleArray *self, CubeModule *module);
 
-void cube_module_array_append_take(CubeModuleArray *self,
-                                    CubeModule *module);
+void cube_module_array_append_take(CubeModuleArray *self, CubeModule *module);
 
 size_t cube_module_array_get_length(CubeModuleArray *self);
 

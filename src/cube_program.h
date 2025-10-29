@@ -5,8 +5,7 @@ typedef struct _CubeProgram CubeProgram;
 #include "string_array.h"
 
 CubeProgram *cube_program_new(const char *name, StringArray *sources,
-                             StringArray *modules,
-                              StringArray *libraries);
+                              StringArray *modules, StringArray *libraries);
 
 const char *cube_program_get_name(CubeProgram *self);
 
