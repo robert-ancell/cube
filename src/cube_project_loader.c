@@ -38,7 +38,8 @@ static CubeProgram *decode_program(JsonValue *program_object) {
 }
 
 static CubeProgramArray *decode_programs(JsonValue *program_array) {
-  if (json_value_get_type(program_array) != JSON_VALUE_TYPE_ARRAY) {
+  if (program_array == NULL ||
+      json_value_get_type(program_array) != JSON_VALUE_TYPE_ARRAY) {
     return NULL;
   }
 
@@ -76,7 +77,8 @@ static CubeModule *decode_module(const char *name, JsonValue *module_object) {
 }
 
 static CubeModuleArray *decode_modules(JsonValue *module_array) {
-  if (json_value_get_type(module_array) != JSON_VALUE_TYPE_OBJECT) {
+  if (module_array == NULL ||
+      json_value_get_type(module_array) != JSON_VALUE_TYPE_OBJECT) {
     return NULL;
   }
 
