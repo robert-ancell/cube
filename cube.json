@@ -16,6 +16,7 @@
       "sources": [
         "modules/core/path_functions.c",
         "modules/core/pointer_array.c",
+        "modules/core/pointer_map.c",
         "modules/core/string_array.c",
         "modules/core/string_builder.c",
         "modules/core/string_functions.c",
