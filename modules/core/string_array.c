@@ -34,11 +34,11 @@ size_t string_array_get_length(StringArray *self) {
   return self->strings_length;
 }
 
-const char *string_array_get_element(StringArray *self, size_t i) {
-  if (i >= self->strings_length) {
+const char *string_array_get_element(StringArray *self, size_t index) {
+  if (index >= self->strings_length) {
     return NULL;
   }
-  return self->strings[i];
+  return self->strings[index];
 }
 
 bool string_array_contains(StringArray *self, const char *string) {

@@ -38,11 +38,11 @@ size_t pointer_array_get_length(PointerArray *self) {
   return self->elements_length;
 }
 
-void *pointer_array_get_element(PointerArray *self, size_t i) {
-  if (i >= self->elements_length) {
+void *pointer_array_get_element(PointerArray *self, size_t index) {
+  if (index >= self->elements_length) {
     return NULL;
   }
-  return self->elements[i];
+  return self->elements[index];
 }
 
 PointerArray *pointer_array_ref(PointerArray *self) {

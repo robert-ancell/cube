@@ -11,7 +11,7 @@ void pointer_array_append_take(PointerArray *self, void *element);
 
 size_t pointer_array_get_length(PointerArray *self);
 
-void *pointer_array_get_element(PointerArray *self, size_t i);
+void *pointer_array_get_element(PointerArray *self, size_t index);
 
 PointerArray *pointer_array_ref(PointerArray *self);
 

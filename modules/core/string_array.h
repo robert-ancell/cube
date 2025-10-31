@@ -12,7 +12,7 @@ void string_array_append_take(StringArray *self, char *string);
 
 size_t string_array_get_length(StringArray *self);
 
-const char *string_array_get_element(StringArray *self, size_t i);
+const char *string_array_get_element(StringArray *self, size_t index);
 
 bool string_array_contains(StringArray *self, const char *string);
 
