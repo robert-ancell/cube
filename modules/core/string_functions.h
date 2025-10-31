@@ -17,7 +17,9 @@ char *string_printf(const char *format, ...)
 size_t string_get_length(const char *string);
 
 // FIXME: Replace strcmp usage
-bool string_matches(const char *string, const char *string2);
+bool string_matches(const char *string1, const char *string2);
+
+int string_compare(const char *string1, const char *string2);
 
 bool string_has_prefix(const char *string, const char *prefix);
 

@@ -55,9 +55,9 @@ size_t string_get_length(const char *string) {
   return string_length;
 }
 
-bool string_matches(const char *string, const char *string2) {
-  size_t count = match_length(string, string2);
-  return string[count] == '\0' && string2[count] == '\0';
+bool string_matches(const char *string1, const char *string2) {
+  size_t count = match_length(string1, string2);
+  return string1[count] == '\0' && string2[count] == '\0';
 }
 
 bool string_has_prefix(const char *string, const char *prefix) {

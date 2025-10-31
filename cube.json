@@ -19,6 +19,7 @@
         "modules/core/pointer_map.c",
         "modules/core/string_array.c",
         "modules/core/string_builder.c",
+        "modules/core/string_map.c",
         "modules/core/string_functions.c",
         "modules/core/utf8.c"
       ],
