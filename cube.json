@@ -14,6 +14,8 @@
   "modules": {
     "core": {
       "sources": [
+        "modules/core/fd.c",
+        "modules/core/main_loop.c",
         "modules/core/path_functions.c",
         "modules/core/pointer_array.c",
         "modules/core/pointer_map.c",
