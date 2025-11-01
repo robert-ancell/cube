@@ -51,6 +51,20 @@
       "include-directories": [
         "modules/json"
       ]
+    },
+    "socket": {
+      "sources": [
+        "modules/socket/ipv4_address.c",
+        "modules/socket/ipv4_socket.c",
+        "modules/socket/ipv6_address.c",
+        "modules/socket/ipv6_socket.c",
+        "modules/socket/unix_socket.c"
+      ],
+      "modules": [
+      ],
+      "include-directories": [
+        "modules/socket"
+      ]
     }
   },
 
@@ -78,6 +92,24 @@
       ],
       "defines": { "FOO": "BAR" },
       "libraries": [ "m" ]
+    },
+    {
+      "name": "socket-server",
+      "sources": [
+         "examples/socket_server.c"
+      ],
+      "modules": [
+        "socket"
+      ]
+    },
+    {
+      "name": "socket-client",
+      "sources": [
+         "examples/socket_client.c"
+      ],
+      "modules": [
+        "socket"
+      ]
     }
   ]
 }
