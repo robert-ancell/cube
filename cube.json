@@ -48,6 +48,8 @@
         "src/cube_command.c",
         "src/cube_command_array.c",
         "src/cube_command_runner.c",
+        "src/cube_define.c",
+        "src/cube_define_array.c",
         "src/cube_module.c",
         "src/cube_module_array.c",
         "src/cube_program.c",

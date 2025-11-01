@@ -495,6 +495,15 @@ static int do_build(int argc, char **argv) {
       const char *source = string_array_get_element(all_sources, j);
       string_array_append_take(args, get_compile_output(build_dir, source));
     }
+    CubeDefineArray *defines = cube_program_get_defines(program);
+    size_t defines_length = cube_define_array_get_length(defines);
+    for (size_t j = 0; j < defines_length; j++) {
+      CubeDefine *define = cube_define_array_get_element(defines, j);
+      char *arg = string_printf("-D%s=%s", cube_define_get_name(define),
+                                cube_define_get_value(define));
+      string_array_append(args, arg);
+      free(arg);
+    }
     StringArray *libraries = cube_program_get_libraries(program);
     size_t libraries_length = string_array_get_length(libraries);
     for (size_t j = 0; j < libraries_length; j++) {

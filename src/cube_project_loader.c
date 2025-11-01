@@ -19,6 +19,28 @@ static StringArray *get_optional_string_array(JsonValue *value,
   return member;
 }
 
+static CubeDefineArray *get_defines(JsonValue *object) {
+  JsonValue *member = json_value_get_object_member(object, "defines");
+  CubeDefineArray *defines = cube_define_array_new();
+  if (member == NULL || json_value_get_type(member) != JSON_VALUE_TYPE_OBJECT) {
+    return defines;
+  }
+
+  size_t defines_length = json_value_get_length(member);
+  for (size_t i = 0; i < defines_length; i++) {
+    const char *define_name = json_value_get_member_name(member, i);
+    JsonValue *define_value = json_value_get_member_value(member, i);
+    if (json_value_get_type(define_value) != JSON_VALUE_TYPE_STRING) {
+      continue;
+    }
+    cube_define_array_append_take(
+        defines,
+        cube_define_new(define_name, json_value_get_string(define_value)));
+  }
+
+  return defines;
+}
+
 static CubeProgram *decode_program(JsonValue *program_object) {
   if (json_value_get_type(program_object) != JSON_VALUE_TYPE_OBJECT) {
     return NULL;
@@ -27,14 +49,11 @@ static CubeProgram *decode_program(JsonValue *program_object) {
   const char *name = json_value_get_string_member(program_object, "name", "");
   StringArray *sources = get_optional_string_array(program_object, "sources");
   StringArray *modules = get_optional_string_array(program_object, "modules");
+  CubeDefineArray *defines = get_defines(program_object);
   StringArray *libraries =
       get_optional_string_array(program_object, "libraries");
 
-  CubeProgram *program = cube_program_new(name, sources, modules, libraries);
-  string_array_unref(sources);
-  string_array_unref(modules);
-  string_array_unref(libraries);
-  return program;
+  return cube_program_new_take(name, sources, modules, defines, libraries);
 }
 
 static CubeProgramArray *decode_programs(JsonValue *program_array) {
