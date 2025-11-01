@@ -18,13 +18,26 @@
         "modules/core/pointer_array.c",
         "modules/core/pointer_map.c",
         "modules/core/string_array.c",
-        "modules/core/string_builder.c",
-        "modules/core/string_map.c",
-        "modules/core/string_functions.c",
-        "modules/core/utf8.c"
+        "modules/core/string_map.c"
       ],
       "include-directories": [
         "modules/core"
+      ],
+      "modules": [
+        "string"
+      ]
+    },
+    "string": {
+      "sources": [
+        "modules/string/string_builder.c",
+        "modules/string/string_functions.c",
+        "modules/string/utf8.c"
+      ],
+      "include-directories": [
+        "modules/string"
+      ],
+      "modules": [
+        "core"
       ]
     },
     "json": {
@@ -60,7 +73,8 @@
       ],
       "modules": [
         "core",
-        "json"
+        "json",
+        "string"
       ],
       "defines": { "FOO": "BAR" },
       "libraries": [ "m" ]
