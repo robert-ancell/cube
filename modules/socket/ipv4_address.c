@@ -4,13 +4,13 @@
 
 #include "ipv4_address.h"
 
-struct _IPv4Address {
+struct _Ipv4Address {
   int ref;
   uint32_t address;
 };
 
-static IPv4Address *ipv4_address_new_raw(uint32_t address) {
-  IPv4Address *self = malloc(sizeof(IPv4Address));
+static Ipv4Address *ipv4_address_new_raw(uint32_t address) {
+  Ipv4Address *self = malloc(sizeof(Ipv4Address));
 
   self->ref = 1;
   self->address = address;
@@ -18,30 +18,30 @@ static IPv4Address *ipv4_address_new_raw(uint32_t address) {
   return self;
 }
 
-IPv4Address *ipv4_address_new(const char *address) {
+Ipv4Address *ipv4_address_new(const char *address) {
   struct in_addr a;
   inet_pton(AF_INET, address, &a);
   return ipv4_address_new_raw(ntohl(a.s_addr));
 }
 
-IPv4Address *ipv4_address_new_loopback() {
+Ipv4Address *ipv4_address_new_loopback() {
   return ipv4_address_new_raw(INADDR_LOOPBACK);
 }
 
-IPv4Address *ipv4_address_new_any() { return ipv4_address_new_raw(INADDR_ANY); }
+Ipv4Address *ipv4_address_new_any() { return ipv4_address_new_raw(INADDR_ANY); }
 
-IPv4Address *ipv4_address_new_broadcast() {
+Ipv4Address *ipv4_address_new_broadcast() {
   return ipv4_address_new_raw(INADDR_BROADCAST);
 }
 
-uint32_t ipv4_address_get_address(IPv4Address *self) { return self->address; }
+uint32_t ipv4_address_get_address(Ipv4Address *self) { return self->address; }
 
-IPv4Address *ipv4_address_ref(IPv4Address *self) {
+Ipv4Address *ipv4_address_ref(Ipv4Address *self) {
   self->ref++;
   return self;
 }
 
-void ipv4_address_unref(IPv4Address *self) {
+void ipv4_address_unref(Ipv4Address *self) {
   if (--self->ref != 0) {
     return;
   }

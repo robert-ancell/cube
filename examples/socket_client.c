@@ -3,8 +3,8 @@
 #include "ipv4_socket.h"
 
 int main(int argc, char **argv) {
-  IPv4Socket *socket = ipv4_socket_new_tcp();
-  IPv4Address *address = ipv4_address_new_loopback();
+  Ipv4Socket *socket = ipv4_socket_new_tcp();
+  Ipv4Address *address = ipv4_address_new_loopback();
   ipv4_socket_connect(socket, address, 1234);
   ipv4_address_unref(address);
 
