@@ -201,6 +201,7 @@ static bool needs_building(CubeCommand *command) {
   StringArray *inputs = cube_command_get_inputs(command);
   StringArray *outputs = cube_command_get_outputs(command);
 
+  // FIXME: Need to check if inputs are about to be rebuilt
   struct timespec youngest_input_time = {};
   size_t inputs_length = string_array_get_length(inputs);
   for (size_t i = 0; i < inputs_length; i++) {
