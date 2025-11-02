@@ -1,7 +1,8 @@
 #include <stdlib.h>
 
+#include <cube/array.h>
+
 #include "cube_define_array.h"
-#include "pointer_array.h"
 
 struct _CubeDefineArray {
   int ref;

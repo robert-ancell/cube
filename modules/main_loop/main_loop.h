@@ -2,7 +2,7 @@
 
 typedef struct _MainLoop MainLoop;
 
-#include "fd.h"
+#include <cube/fd.h>
 
 typedef void (*MainLoopReadCallback)(MainLoop *self, void *user_data);
 

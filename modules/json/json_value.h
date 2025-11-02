@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "string_array.h"
+#include <cube/array.h>
 
 typedef struct _JsonValue JsonValue;
 

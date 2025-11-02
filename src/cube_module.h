@@ -2,7 +2,7 @@
 
 typedef struct _CubeModule CubeModule;
 
-#include "string_array.h"
+#include <cube/array.h>
 
 CubeModule *cube_module_new(const char *name, StringArray *sources,
                             StringArray *modules,

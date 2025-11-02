@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "string_array.h"
+#include <cube/array.h>
 
 // FIXME: Naming
 

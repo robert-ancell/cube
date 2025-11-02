@@ -2,7 +2,7 @@
 
 typedef struct _CubeCommand CubeCommand;
 
-#include "string_array.h"
+#include <cube/array.h>
 
 CubeCommand *cube_command_new(StringArray *inputs, StringArray *args,
                               StringArray *outputs, const char *label);

@@ -12,18 +12,25 @@
   ],
 
   "modules": {
-    "core": {
+    "array": {
       "sources": [
-        "modules/core/fd.c",
-        "modules/core/main_loop.c",
-        "modules/core/path_functions.c",
-        "modules/core/pointer_array.c",
-        "modules/core/pointer_map.c",
-        "modules/core/string_array.c",
-        "modules/core/string_map.c"
+        "modules/array/pointer_array.c",
+        "modules/array/string_array.c"
       ],
       "include-directories": [
-        "modules/core"
+        "modules/array/include"
+      ],
+      "modules": [
+        "string"
+      ]
+    },
+    "map": {
+      "sources": [
+        "modules/map/pointer_map.c",
+        "modules/map/string_map.c"
+      ],
+      "include-directories": [
+        "modules/map/include"
       ],
       "modules": [
         "string"
@@ -39,7 +46,18 @@
         "modules/string/include"
       ],
       "modules": [
-        "core"
+        "array"
+      ]
+    },
+    "path": {
+      "sources": [
+        "modules/path/path_functions.c"
+      ],
+      "include-directories": [
+        "modules/path/include"
+      ],
+      "modules": [
+        "string"
       ]
     },
     "json": {
@@ -48,10 +66,29 @@
         "modules/json/json_value.c"
       ],
       "modules": [
-        "core"
+        "array"
       ],
       "include-directories": [
         "modules/json/include"
+      ]
+    },
+    "fd": {
+      "sources": [
+        "modules/fd/fd.c"
+      ],
+      "include-directories": [
+        "modules/fd/include"
+      ]
+    },
+    "main_loop": {
+      "sources": [
+        "modules/main_loop/main_loop.c"
+      ],
+      "modules": [
+        "fd"
+      ],
+      "include-directories": [
+        "modules/main_loop/include"
       ]
     },
     "socket": {
@@ -88,8 +125,9 @@
         "src/main.c"
       ],
       "modules": [
-        "core",
+        "array",
         "json",
+        "path",	
         "string"
       ],
       "defines": { "FOO": "BAR" },

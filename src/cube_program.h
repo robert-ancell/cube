@@ -2,8 +2,9 @@
 
 typedef struct _CubeProgram CubeProgram;
 
+#include <cube/array.h>
+
 #include "cube_define_array.h"
-#include "string_array.h"
 
 CubeProgram *cube_program_new_take(const char *name, StringArray *sources,
                                    StringArray *modules,
