@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cube/string.h>
+
 #include "json_value.h"
-#include "string_builder.h"
-#include "utf8.h"
 
 struct _JsonValue {
   int ref;

@@ -2,6 +2,7 @@
 
 typedef struct _StringBuilder StringBuilder;
 
+#include <stddef.h>
 #include <stdint.h>
 
 StringBuilder *string_builder_new();

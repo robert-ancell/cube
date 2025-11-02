@@ -4,12 +4,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+#include <cube/string.h>
+
 #include "cube_command_runner.h"
 #include "cube_project_loader.h"
 #include "path_functions.h"
-#include "string_builder.h"
-#include "string_functions.h"
-#include "utf8.h"
 
 static int print_no_project_error() {
   fprintf(stderr, "No Cube project found, see `cube help create`.\n");

@@ -1,5 +1,6 @@
+#include <cube/string.h>
+
 #include "path_functions.h"
-#include "string_functions.h"
 
 static int get_separator_index(const char *path) {
   int separator_index = -1;

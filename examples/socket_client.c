@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "ipv4_socket.h"
+#include <cube/socket.h>
 
 int main(int argc, char **argv) {
   Ipv4Socket *socket = ipv4_socket_new_tcp();

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ipv4_socket.h"
+#include <cube/socket.h>
 
 int main(int argc, char **argv) {
   uint16_t port = 1234;

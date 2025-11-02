@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <cube/json.h>
+#include <cube/string.h>
+
 #include "cube_project_loader.h"
-#include "json_parser.h"
-#include "string_functions.h"
 
 struct _CubeProjectLoader {
   CubeProjectLoaderError error;

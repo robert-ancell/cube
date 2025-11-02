@@ -1,7 +1,8 @@
 #include <stdlib.h>
 
+#include <cube/string.h>
+
 #include "cube_project.h"
-#include "string_functions.h"
 
 struct _CubeProject {
   int ref;

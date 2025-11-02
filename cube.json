@@ -36,7 +36,7 @@
         "modules/string/utf8.c"
       ],
       "include-directories": [
-        "modules/string"
+        "modules/string/include"
       ],
       "modules": [
         "core"
@@ -51,7 +51,7 @@
         "core"
       ],
       "include-directories": [
-        "modules/json"
+        "modules/json/include"
       ]
     },
     "socket": {
@@ -65,7 +65,7 @@
       "modules": [
       ],
       "include-directories": [
-        "modules/socket"
+        "modules/socket/include"
       ]
     }
   },

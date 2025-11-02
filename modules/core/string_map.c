@@ -1,8 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <cube/string.h>
+
 #include "pointer_map.h"
-#include "string_functions.h"
 #include "string_map.h"
 
 struct _StringMap {

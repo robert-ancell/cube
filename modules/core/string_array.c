@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cube/string.h>
+
 #include "string_array.h"
-#include "string_functions.h"
 
 struct _StringArray {
   int ref;
