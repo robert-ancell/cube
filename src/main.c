@@ -651,9 +651,22 @@ static int do_clean(int argc, char **argv) {
     return print_no_project_error();
   }
 
-  printf("FIXME: clean\n");
+  CubeCommandArray *commands = cube_command_array_new();
 
-  cube_project_unref(project);
+  StringArray *args = string_array_new();
+  string_array_append(args, "rm");
+  string_array_append(args, "--recursive");
+  string_array_append(args, "--force");
+  string_array_append(args, ".cube");
+  cube_command_array_append_take(
+      commands,
+      cube_command_new_take(string_array_new(), args, string_array_new(),
+                            string_copy("Removing artifacts")));
+
+  CubeCommandRunner *runner =
+      cube_command_runner_new(commands, &runner_callbacks, NULL);
+  cube_command_array_unref(commands);
+  cube_command_runner_run(runner);
 
   return 1;
 }
