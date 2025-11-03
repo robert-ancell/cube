@@ -11,15 +11,15 @@ struct _CubeProject {
   CubeModuleArray *modules;
 };
 
-CubeProject *cube_project_new(CubeProgramArray *programs,
-                              CubeImportArray *imports,
-                              CubeModuleArray *modules) {
+CubeProject *cube_project_new_take(CubeProgramArray *programs,
+                                   CubeImportArray *imports,
+                                   CubeModuleArray *modules) {
   CubeProject *self = malloc(sizeof(CubeProject));
 
   self->ref = 1;
-  self->programs = cube_program_array_ref(programs);
-  self->imports = cube_import_array_ref(imports);
-  self->modules = cube_module_array_ref(modules);
+  self->programs = programs;
+  self->imports = imports;
+  self->modules = modules;
 
   return self;
 }

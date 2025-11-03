@@ -4,9 +4,9 @@ typedef struct _CubeModule CubeModule;
 
 #include <cube/array.h>
 
-CubeModule *cube_module_new(const char *name, StringArray *sources,
-                            StringArray *modules,
-                            StringArray *include_directories);
+CubeModule *cube_module_new_take(const char *name, StringArray *sources,
+                                 StringArray *modules,
+                                 StringArray *include_directories);
 
 const char *cube_module_get_name(CubeModule *self);
 

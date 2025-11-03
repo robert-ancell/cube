@@ -11,16 +11,16 @@ struct _CubeModule {
   StringArray *include_directories;
 };
 
-CubeModule *cube_module_new(const char *name, StringArray *sources,
-                            StringArray *modules,
-                            StringArray *include_directories) {
+CubeModule *cube_module_new_take(const char *name, StringArray *sources,
+                                 StringArray *modules,
+                                 StringArray *include_directories) {
   CubeModule *self = malloc(sizeof(CubeModule));
 
   self->ref = 1;
   self->name = strdup(name);
-  self->sources = string_array_ref(sources);
-  self->modules = string_array_ref(modules);
-  self->include_directories = string_array_ref(include_directories);
+  self->sources = sources;
+  self->modules = modules;
+  self->include_directories = include_directories;
 
   return self;
 }

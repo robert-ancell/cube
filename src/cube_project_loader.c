@@ -4,6 +4,7 @@
 #include <cube/json.h>
 #include <cube/string.h>
 
+#include "cube_module.h"
 #include "cube_project_loader.h"
 
 struct _CubeProjectLoader {
@@ -119,12 +120,7 @@ static CubeModule *decode_module(const char *name, JsonValue *module_object) {
   StringArray *include_directories =
       get_optional_string_array(module_object, "include-directories");
 
-  CubeModule *module =
-      cube_module_new(name, sources, modules, include_directories);
-  string_array_unref(sources);
-  string_array_unref(modules);
-  string_array_unref(include_directories);
-  return module;
+  return cube_module_new_take(name, sources, modules, include_directories);
 }
 
 static CubeModuleArray *decode_modules(JsonValue *module_array) {
@@ -177,11 +173,7 @@ static CubeProject *decode_project(JsonParser *parser) {
     modules = cube_module_array_new();
   }
 
-  CubeProject *project = cube_project_new(programs, imports, modules);
-  cube_program_array_unref(programs);
-  cube_module_array_unref(modules);
-
-  return project;
+  return cube_project_new_take(programs, imports, modules);
 }
 
 static void load_project(CubeProjectLoader *self, const char *path) {

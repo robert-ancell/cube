@@ -7,9 +7,9 @@ typedef struct _CubeProject CubeProject;
 #include "cube_module_array.h"
 #include "cube_program_array.h"
 
-CubeProject *cube_project_new(CubeProgramArray *programs,
-                              CubeImportArray *imports,
-                              CubeModuleArray *modules);
+CubeProject *cube_project_new_take(CubeProgramArray *programs,
+                                   CubeImportArray *imports,
+                                   CubeModuleArray *modules);
 
 CubeProgramArray *cube_project_get_programs(CubeProject *self);
 
