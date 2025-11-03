@@ -9,17 +9,17 @@ for program in project["programs"]:
         continue
 
     command = ["gcc", "-g", "-Wall"]
-    for module_name in program["modules"]:
+    for module_name in program.get("modules", []):
         module = project["modules"][module_name]
         for source in module["sources"]:
             command.append(source)
         for dir in module["include-directories"]:
             command.append("-I" + dir)
-    for source in program["sources"]:
+    for source in program.get("sources", []):
         command.append(source)
-    for name, value in program["defines"].items():
+    for name, value in program.get("defines", {}).items():
         command.append("-D" + name + "=" + value)
-    for library in program["libraries"]:
+    for library in program.get("libraries", {}):
         command.append("-l" + library)
     command.extend(["-o", "cube"])
 

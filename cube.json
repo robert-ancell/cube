@@ -1,16 +1,4 @@
 {
-  "imports": [
-    {
-       "github": "robert-ancell/cube-json",
-       "url": "https://github.com/robert-ancell/cube.git",
-       "path": "./packages/cube-json",
-       "ref": "main",
-       "modules": [
-         "json"
-       ]
-    }
-  ],
-
   "modules": {
     "array": {
       "sources": [
@@ -110,12 +98,20 @@
   "programs": [
     {
       "name": "cube",
+      "modules": [
+        "array",
+        "json",
+        "path",
+        "string"
+      ],
       "sources": [
         "src/cube_command.c",
         "src/cube_command_array.c",
         "src/cube_command_runner.c",
         "src/cube_define.c",
         "src/cube_define_array.c",
+        "src/cube_import.c",
+        "src/cube_import_array.c",
         "src/cube_module.c",
         "src/cube_module_array.c",
         "src/cube_program.c",
@@ -124,31 +120,24 @@
         "src/cube_project_loader.c",
         "src/main.c"
       ],
-      "modules": [
-        "array",
-        "json",
-        "path",	
-        "string"
-      ],
-      "defines": { "FOO": "BAR" },
       "libraries": [ "m" ]
     },
     {
       "name": "socket-server",
-      "sources": [
-         "examples/socket_server.c"
-      ],
       "modules": [
         "socket"
+      ],
+      "sources": [
+         "examples/socket_server.c"
       ]
     },
     {
       "name": "socket-client",
-      "sources": [
-         "examples/socket_client.c"
-      ],
       "modules": [
         "socket"
+      ],
+      "sources": [
+         "examples/socket_client.c"
       ]
     }
   ]
