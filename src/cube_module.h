@@ -5,7 +5,7 @@ typedef struct _CubeModule CubeModule;
 #include <cube/array.h>
 
 CubeModule *cube_module_new_take(const char *name, StringArray *sources,
-                                 StringArray *modules,
+                                 StringArray *modules, StringArray *libraries,
                                  StringArray *include_directories);
 
 const char *cube_module_get_name(CubeModule *self);
@@ -13,6 +13,8 @@ const char *cube_module_get_name(CubeModule *self);
 StringArray *cube_module_get_sources(CubeModule *self);
 
 StringArray *cube_module_get_modules(CubeModule *self);
+
+StringArray *cube_module_get_libraries(CubeModule *self);
 
 StringArray *cube_module_get_include_directories(CubeModule *self);
 

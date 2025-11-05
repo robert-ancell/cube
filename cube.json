@@ -58,7 +58,8 @@
       ],
       "include-directories": [
         "modules/json/include"
-      ]
+      ],
+      "libraries": [ "m" ]
     },
     "fd": {
       "sources": [
@@ -119,8 +120,7 @@
         "src/cube_project.c",
         "src/cube_project_loader.c",
         "src/main.c"
-      ],
-      "libraries": [ "m" ]
+      ]
     },
     {
       "name": "socket-server",

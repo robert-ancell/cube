@@ -397,6 +397,16 @@ static StringArray *get_module_include_directories(CubeModuleArray *modules) {
   return include_directories;
 }
 
+static void add_library_args(StringArray *args, StringArray *libraries) {
+  size_t libraries_length = string_array_get_length(libraries);
+  for (size_t j = 0; j < libraries_length; j++) {
+    const char *library = string_array_get_element(libraries, j);
+    char *arg = string_printf("-l%s", library);
+    string_array_append(args, arg);
+    free(arg);
+  }
+}
+
 static int do_build(int argc, char **argv) {
   if (argc != 0) {
     return print_invalid_command_args("build");
@@ -516,14 +526,11 @@ static int do_build(int argc, char **argv) {
       string_array_append(args, arg);
       free(arg);
     }
-    StringArray *libraries = cube_program_get_libraries(program);
-    size_t libraries_length = string_array_get_length(libraries);
-    for (size_t j = 0; j < libraries_length; j++) {
-      const char *library = string_array_get_element(libraries, j);
-      char *arg = string_printf("-l%s", library);
-      string_array_append(args, arg);
-      free(arg);
+    for (size_t j = 0; j < modules_length; j++) {
+      CubeModule *module = cube_module_array_get_element(modules, j);
+      add_library_args(args, cube_module_get_libraries(module));
     }
+    add_library_args(args, cube_program_get_libraries(program));
     string_array_append(args, "-o");
     string_array_append(args, binary_name);
 

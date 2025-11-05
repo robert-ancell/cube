@@ -8,11 +8,12 @@ struct _CubeModule {
   char *name;
   StringArray *sources;
   StringArray *modules;
+  StringArray *libraries;
   StringArray *include_directories;
 };
 
 CubeModule *cube_module_new_take(const char *name, StringArray *sources,
-                                 StringArray *modules,
+                                 StringArray *modules, StringArray *libraries,
                                  StringArray *include_directories) {
   CubeModule *self = malloc(sizeof(CubeModule));
 
@@ -20,6 +21,7 @@ CubeModule *cube_module_new_take(const char *name, StringArray *sources,
   self->name = strdup(name);
   self->sources = sources;
   self->modules = modules;
+  self->libraries = libraries;
   self->include_directories = include_directories;
 
   return self;
@@ -30,6 +32,10 @@ const char *cube_module_get_name(CubeModule *self) { return self->name; }
 StringArray *cube_module_get_sources(CubeModule *self) { return self->sources; }
 
 StringArray *cube_module_get_modules(CubeModule *self) { return self->modules; }
+
+StringArray *cube_module_get_libraries(CubeModule *self) {
+  return self->libraries;
+}
 
 StringArray *cube_module_get_include_directories(CubeModule *self) {
   return self->include_directories;
@@ -48,6 +54,7 @@ void cube_module_unref(CubeModule *self) {
   free(self->name);
   string_array_unref(self->sources);
   string_array_unref(self->modules);
+  string_array_unref(self->libraries);
   string_array_unref(self->include_directories);
   free(self);
 }

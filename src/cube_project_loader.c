@@ -117,10 +117,13 @@ static CubeModule *decode_module(const char *name, JsonValue *module_object) {
 
   StringArray *sources = get_optional_string_array(module_object, "sources");
   StringArray *modules = get_optional_string_array(module_object, "modules");
+  StringArray *libraries =
+      get_optional_string_array(module_object, "libraries");
   StringArray *include_directories =
       get_optional_string_array(module_object, "include-directories");
 
-  return cube_module_new_take(name, sources, modules, include_directories);
+  return cube_module_new_take(name, sources, modules, libraries,
+                              include_directories);
 }
 
 static CubeModuleArray *decode_modules(JsonValue *module_array) {
