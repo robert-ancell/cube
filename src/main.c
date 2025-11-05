@@ -123,9 +123,7 @@ static char *get_compile_output(const char *build_dir, const char *input_path) {
   StringBuilder *builder = string_builder_new();
   string_builder_append(builder, build_dir);
   string_builder_append(builder, "/");
-  char *base = string_slice(input_path, 0, -2);
-  string_builder_append(builder, base);
-  free(base);
+  string_builder_append_take(builder, string_slice(input_path, 0, -2));
   string_builder_append(builder, ".bc");
   char *output_path = string_builder_take_string(builder);
   string_builder_unref(builder);
@@ -615,10 +613,8 @@ static char *get_source_header(const char *source) {
     return NULL;
   }
 
-  char *base = string_slice(source, 0, -2);
   StringBuilder *builder = string_builder_new();
-  string_builder_append(builder, base);
-  free(base);
+  string_builder_append(builder, string_slice(source, 0, -2));
   string_builder_append(builder, ".h");
   char *header = string_builder_take_string(builder);
   string_builder_unref(builder);

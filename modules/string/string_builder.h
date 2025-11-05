@@ -9,6 +9,8 @@ StringBuilder *string_builder_new();
 
 void string_builder_append(StringBuilder *self, const char *string);
 
+void string_builder_append_take(StringBuilder *self, char *string);
+
 void string_builder_append_codepoint(StringBuilder *self, uint32_t codepoint);
 
 size_t string_builder_get_length(StringBuilder *self);

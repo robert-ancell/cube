@@ -96,13 +96,9 @@ static char *object_to_string(size_t length, char **names, JsonValue **values) {
     if (i != 0) {
       string_builder_append(builder, ",");
     }
-    char *name_string = string_to_string(names[i]);
-    char *value_string = json_value_to_string(values[i]);
-    string_builder_append(builder, name_string);
+    string_builder_append_take(builder, string_to_string(names[i]));
     string_builder_append(builder, ":");
-    string_builder_append(builder, value_string);
-    free(name_string);
-    free(value_string);
+    string_builder_append_take(builder, json_value_to_string(values[i]));
   }
   string_builder_append(builder, "}");
 
@@ -118,9 +114,7 @@ static char *array_to_string(size_t length, JsonValue **elements) {
     if (i != 0) {
       string_builder_append(builder, ",");
     }
-    char *element_string = json_value_to_string(elements[i]);
-    string_builder_append(builder, element_string);
-    free(element_string);
+    string_builder_append(builder, json_value_to_string(elements[i]));
   }
   string_builder_append(builder, "]");
 

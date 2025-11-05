@@ -36,6 +36,11 @@ void string_builder_append(StringBuilder *self, const char *string) {
   self->string_length += string_length;
 }
 
+void string_builder_append_take(StringBuilder *self, char *string) {
+  string_builder_append(self, string);
+  free(string);
+}
+
 void string_builder_append_codepoint(StringBuilder *self, uint32_t codepoint) {
   if (codepoint <= 0x7f) {
     self->string_length++;
