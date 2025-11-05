@@ -217,7 +217,7 @@ static bool needs_building(CubeCommand *command) {
   size_t inputs_length = string_array_get_length(inputs);
   for (size_t i = 0; i < inputs_length; i++) {
     const char *input = string_array_get_element(inputs, i);
-    struct stat info;
+    struct stat info = {};
     if (stat(input, &info) != 0) {
       // Input missing - build to get error.
       return true;
@@ -230,7 +230,7 @@ static bool needs_building(CubeCommand *command) {
   size_t outputs_length = string_array_get_length(outputs);
   for (size_t i = 0; i < outputs_length; i++) {
     const char *output = string_array_get_element(outputs, i);
-    struct stat info;
+    struct stat info = {};
     if (stat(output, &info) != 0) {
       // Output missing - build.
       return true;
@@ -605,6 +605,40 @@ static int do_document(int argc, char **argv) {
   return 1;
 }
 
+static bool file_exists(const char *path) {
+  struct stat info = {};
+  return stat(path, &info) == 0;
+}
+
+static char *get_source_header(const char *source) {
+  if (!string_has_suffix(source, ".c")) {
+    return NULL;
+  }
+
+  char *base = string_slice(source, 0, -2);
+  StringBuilder *builder = string_builder_new();
+  string_builder_append(builder, base);
+  free(base);
+  string_builder_append(builder, ".h");
+  char *header = string_builder_take_string(builder);
+  string_builder_unref(builder);
+  return header;
+}
+
+static void add_format_source(StringArray *args, const char *source) {
+  string_array_append(args, source);
+  char *header = get_source_header(source);
+  if (header == NULL) {
+    return;
+  }
+  if (!file_exists(header)) {
+    free(header);
+    return;
+  }
+
+  string_array_append_take(args, header);
+}
+
 static int do_format(int argc, char **argv) {
   if (argc != 0) {
     return print_invalid_command_args("format");
@@ -626,7 +660,7 @@ static int do_format(int argc, char **argv) {
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
-      string_array_append(args, source);
+      add_format_source(args, source);
     }
   }
   CubeModuleArray *modules = cube_project_get_modules(project);
@@ -637,7 +671,7 @@ static int do_format(int argc, char **argv) {
     size_t sources_length = string_array_get_length(sources);
     for (size_t j = 0; j < sources_length; j++) {
       const char *source = string_array_get_element(sources, j);
-      string_array_append(args, source);
+      add_format_source(args, source);
     }
   }
 
