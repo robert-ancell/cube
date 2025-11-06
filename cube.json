@@ -12,6 +12,18 @@
         "string"
       ]
     },
+    "set": {
+      "sources": [
+        "modules/set/pointer_set.c",
+        "modules/set/string_set.c"
+      ],
+      "include-directories": [
+        "modules/set/include"
+      ],
+      "modules": [
+        "string"
+      ]
+    },
     "map": {
       "sources": [
         "modules/map/pointer_map.c",
