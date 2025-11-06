@@ -49,6 +49,14 @@
         "array"
       ]
     },
+    "hash": {
+      "sources": [
+        "modules/hash/sha1_calculator.c"
+      ],
+      "include-directories": [
+        "modules/hash/include"
+      ]
+    },
     "path": {
       "sources": [
         "modules/path/path_functions.c"
