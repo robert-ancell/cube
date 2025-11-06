@@ -37,6 +37,7 @@ PointerMap *pointer_map_new(int (*key_compare_function)(void *, void *),
   PointerMap *self = malloc(sizeof(PointerMap));
 
   self->ref = 1;
+  self->key_function_function = key_function_function;
   self->key_ref_function = key_ref_function;
   self->key_unref_function = key_unref_function;
   self->value_ref_function = value_ref_function;
