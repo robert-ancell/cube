@@ -120,6 +120,8 @@ static int do_create(int argc, char **argv) {
   free(source_path);
   free(main_path);
 
+  cube_project_unref(project);
+
   return result;
 }
 
@@ -700,6 +702,8 @@ static int do_clean(int argc, char **argv) {
     return print_invalid_command_args("clean");
   }
 
+  // FIXME: Make --all or --imports
+
   CubeProject *project = load_project();
   if (project == NULL) {
     return print_no_project_error();
@@ -711,7 +715,7 @@ static int do_clean(int argc, char **argv) {
   string_array_append(args, "rm");
   string_array_append(args, "--recursive");
   string_array_append(args, "--force");
-  string_array_append(args, ".cube");
+  string_array_append(args, ".cube/build");
   cube_command_array_append_take(
       commands,
       cube_command_new_take(string_array_new(), args, string_array_new(),
@@ -721,6 +725,44 @@ static int do_clean(int argc, char **argv) {
       cube_command_runner_new(commands, &runner_callbacks, NULL);
   cube_command_array_unref(commands);
   cube_command_runner_run(runner);
+
+  cube_project_unref(project);
+
+  return 1;
+}
+
+static char *get_import_dir(CubeImport *import) {
+  const char *imports_dir = ".cube/imports";
+
+  // const char *url = cube_import_get_url(import);
+  //  FIXME: Hash URL and symlink modules to it
+  return string_printf("%s/%s\n", imports_dir, "FIXME");
+}
+
+static int do_update(int argc, char **argv) {
+  CubeProject *project = load_project();
+  if (project == NULL) {
+    return print_no_project_error();
+  }
+
+  StringArray *directories = string_array_new();
+
+  CubeImportArray *imports = cube_project_get_imports(project);
+  size_t imports_length = cube_import_array_get_length(imports);
+  for (size_t i = 0; i < imports_length; i++) {
+    CubeImport *import = cube_import_array_get_element(imports, i);
+    char *dir = get_import_dir(import);
+    add_directory(directories, dir);
+  }
+
+  size_t directories_length = string_array_get_length(directories);
+  for (size_t i = 0; i < directories_length; i++) {
+    const char *path = string_array_get_element(directories, i);
+    mkdir(path, 0777);
+  }
+  string_array_unref(directories);
+
+  cube_project_unref(project);
 
   return 1;
 }
@@ -743,13 +785,14 @@ static int do_help(int argc, char **argv) {
             "Usage: cube <command> [<options>...]\n"
             "\n"
             "Commands:\n"
-            " analyze   Analyze project\n"
             " create    Create project\n"
+            " update    Update imports\n"
             " build     Build project\n"
             " test      Run tests\n"
-            " document  Update project documentation\n"
-            " format    Reformat code\n"
             " clean     Delete build artifacts\n"
+            " analyze   Analyze project\n"
+            " document  Generate project documentation\n"
+            " format    Reformat code\n"
             " help      Show command help\n"
             "\n"
             "For more information on a command, run 'cube help <command>'\n");
@@ -763,21 +806,23 @@ static int do_help(int argc, char **argv) {
   const char *command = argv[0];
   if (string_matches(command, "analyze")) {
     print_command_help("analyze", "Analyze project.");
-  } else if (string_matches(command, "create")) {
-    print_command_help("create <project>", "Create a new Cube project.");
   } else if (string_matches(command, "build")) {
     print_command_help("build", "Build all artifacts for this project.");
-  } else if (string_matches(command, "test")) {
-    print_command_help("test", "Build and run project tests.");
-  } else if (string_matches(command, "document")) {
-    print_command_help("document", "Update project documentation.");
-  } else if (string_matches(command, "format")) {
-    print_command_help("format", "Update source code to standard style.");
   } else if (string_matches(command, "clean")) {
     print_command_help("clean", "Delete all built artifacts.");
+  } else if (string_matches(command, "create")) {
+    print_command_help("create <project>", "Create a new Cube project.");
+  } else if (string_matches(command, "document")) {
+    print_command_help("document", "Generate project documentation.");
+  } else if (string_matches(command, "format")) {
+    print_command_help("format", "Update source code to standard style.");
   } else if (string_matches(command, "help")) {
     print_command_help("help [<command>]",
                        "Show help information about each Cube command.");
+  } else if (string_matches(command, "test")) {
+    print_command_help("test", "Build and run project tests.");
+  } else if (string_matches(command, "update")) {
+    print_command_help("update", "Update imports.");
   } else {
     fprintf(stderr, "Unknown command \"%s\", see `cube help`.\n", command);
     return 1;
@@ -797,20 +842,22 @@ int main(int argc, char **argv) {
 
   if (string_matches(command, "analyze")) {
     return do_analyze(command_argc, command_argv);
-  } else if (string_matches(command, "create")) {
-    return do_create(command_argc, command_argv);
   } else if (string_matches(command, "build")) {
     return do_build(command_argc, command_argv);
-  } else if (string_matches(command, "test")) {
-    return do_test(command_argc, command_argv);
+  } else if (string_matches(command, "clean")) {
+    return do_clean(command_argc, command_argv);
+  } else if (string_matches(command, "create")) {
+    return do_create(command_argc, command_argv);
   } else if (string_matches(command, "document")) {
     return do_document(command_argc, command_argv);
   } else if (string_matches(command, "format")) {
     return do_format(command_argc, command_argv);
-  } else if (string_matches(command, "clean")) {
-    return do_clean(command_argc, command_argv);
   } else if (string_matches(command, "help")) {
     return do_help(command_argc, command_argv);
+  } else if (string_matches(command, "test")) {
+    return do_test(command_argc, command_argv);
+  } else if (string_matches(command, "update")) {
+    return do_update(command_argc, command_argv);
   } else {
     fprintf(stderr, "Unknown command \"%s\", see 'cube help'\n", command);
     return 1;
