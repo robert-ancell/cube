@@ -34,6 +34,11 @@ static CubeProject *load_project_from_path(const char *path) {
 
 static CubeProject *load_project() { return load_project_from_path("."); }
 
+static int do_analyze(int argc, char **argv) {
+  printf("FIXME: analyze\n");
+  return 0;
+}
+
 static int create_project(const char *name, const char *project_path,
                           const char *source_path, const char *main_path) {
   // FIXME: Handle errors
@@ -738,6 +743,7 @@ static int do_help(int argc, char **argv) {
             "Usage: cube <command> [<options>...]\n"
             "\n"
             "Commands:\n"
+            " analyze   Analyze project\n"
             " create    Create project\n"
             " build     Build project\n"
             " test      Run tests\n"
@@ -755,7 +761,9 @@ static int do_help(int argc, char **argv) {
   }
 
   const char *command = argv[0];
-  if (string_matches(command, "create")) {
+  if (string_matches(command, "analyze")) {
+    print_command_help("analyze", "Analyze project.");
+  } else if (string_matches(command, "create")) {
     print_command_help("create <project>", "Create a new Cube project.");
   } else if (string_matches(command, "build")) {
     print_command_help("build", "Build all artifacts for this project.");
@@ -787,7 +795,9 @@ int main(int argc, char **argv) {
   int command_argc = argc - 2;
   char **command_argv = argv + 2;
 
-  if (string_matches(command, "create")) {
+  if (string_matches(command, "analyze")) {
+    return do_analyze(command_argc, command_argv);
+  } else if (string_matches(command, "create")) {
     return do_create(command_argc, command_argv);
   } else if (string_matches(command, "build")) {
     return do_build(command_argc, command_argv);
