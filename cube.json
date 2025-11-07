@@ -108,10 +108,19 @@
         "modules/socket/ipv6_socket.c",
         "modules/socket/unix_socket.c"
       ],
-      "modules": [
-      ],
       "include-directories": [
         "modules/socket/include"
+      ]
+    },
+    "uri": {
+      "sources": [
+        "modules/uri/uri.c"
+      ],
+      "modules": [
+        "string"
+      ],
+      "include-directories": [
+        "modules/uri/include"
       ]
     }
   },
@@ -123,7 +132,8 @@
         "array",
         "json",
         "path",
-        "string"
+        "string",
+        "uri"
       ],
       "sources": [
         "src/cube_command.c",
