@@ -778,7 +778,7 @@ static int do_update(int argc, char **argv) {
     cube_command_array_append_take(
         commands,
         cube_command_new_take(string_array_new(), args, string_array_new(),
-                              string_copy("Removing artifacts")));
+                              string_copy("Updating imports")));
     free(dir);
   }
 
