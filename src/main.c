@@ -758,11 +758,23 @@ static int do_update(int argc, char **argv) {
     char *dir = get_import_dir(import);
     add_directory(directories, dir);
 
+    char *git_dir = string_printf("%s/.git", dir);
+    bool have_repository = file_exists(git_dir);
+    free(git_dir);
+
     StringArray *args = string_array_new();
-    string_array_append(args, "git");
-    string_array_append(args, "clone");
-    string_array_append(args, cube_import_get_url(import));
-    string_array_append(args, dir);
+    if (!have_repository) {
+      string_array_append(args, "git");
+      string_array_append(args, "clone");
+      string_array_append(args, cube_import_get_url(import));
+      string_array_append(args, dir);
+    } else {
+      string_array_append(args, "git");
+      string_array_append(args, "-C");
+      string_array_append(args, dir);
+      string_array_append(args, "pull");
+    }
+
     cube_command_array_append_take(
         commands,
         cube_command_new_take(string_array_new(), args, string_array_new(),
