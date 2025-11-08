@@ -6,6 +6,7 @@
 
 #include <cube/path.h>
 #include <cube/string.h>
+#include <cube/uri.h>
 
 #include "cube_command_runner.h"
 #include "cube_project_loader.h"
@@ -555,8 +556,7 @@ static int do_build(int argc, char **argv) {
   }
 
   CubeCommandRunner *runner =
-      cube_command_runner_new(commands, &runner_callbacks, NULL);
-  cube_command_array_unref(commands);
+      cube_command_runner_new_take(commands, &runner_callbacks, NULL);
   cube_command_runner_run(runner);
 
   int return_value = 0;
@@ -686,13 +686,13 @@ static int do_format(int argc, char **argv) {
                                       string_copy("Formatting sources")));
 
   CubeCommandRunner *runner =
-      cube_command_runner_new(commands, &runner_callbacks, NULL);
-  cube_command_array_unref(commands);
+      cube_command_runner_new_take(commands, &runner_callbacks, NULL);
   cube_command_runner_run(runner);
 
   // FIXME: Print summary of what was formatted
 
   cube_project_unref(project);
+  cube_command_runner_unref(runner);
 
   return 0;
 }
@@ -722,11 +722,11 @@ static int do_clean(int argc, char **argv) {
                             string_copy("Removing artifacts")));
 
   CubeCommandRunner *runner =
-      cube_command_runner_new(commands, &runner_callbacks, NULL);
-  cube_command_array_unref(commands);
+      cube_command_runner_new_take(commands, &runner_callbacks, NULL);
   cube_command_runner_run(runner);
 
   cube_project_unref(project);
+  cube_command_runner_unref(runner);
 
   return 1;
 }
@@ -734,9 +734,12 @@ static int do_clean(int argc, char **argv) {
 static char *get_import_dir(CubeImport *import) {
   const char *imports_dir = ".cube/imports";
 
-  // const char *url = cube_import_get_url(import);
-  //  FIXME: Hash URL and symlink modules to it
-  return string_printf("%s/%s\n", imports_dir, "FIXME");
+  Uri *uri = uri_new_from_string(cube_import_get_url(import));
+  char *dir = string_printf("%s/%s/%s%s", imports_dir, uri_get_scheme(uri),
+                            uri_get_host(uri), uri_get_path(uri));
+  uri_unref(uri);
+
+  return dir;
 }
 
 static int do_update(int argc, char **argv) {
@@ -745,6 +748,7 @@ static int do_update(int argc, char **argv) {
     return print_no_project_error();
   }
 
+  CubeCommandArray *commands = cube_command_array_new();
   StringArray *directories = string_array_new();
 
   CubeImportArray *imports = cube_project_get_imports(project);
@@ -753,6 +757,17 @@ static int do_update(int argc, char **argv) {
     CubeImport *import = cube_import_array_get_element(imports, i);
     char *dir = get_import_dir(import);
     add_directory(directories, dir);
+
+    StringArray *args = string_array_new();
+    string_array_append(args, "git");
+    string_array_append(args, "clone");
+    string_array_append(args, cube_import_get_url(import));
+    string_array_append(args, dir);
+    cube_command_array_append_take(
+        commands,
+        cube_command_new_take(string_array_new(), args, string_array_new(),
+                              string_copy("Removing artifacts")));
+    free(dir);
   }
 
   size_t directories_length = string_array_get_length(directories);
@@ -762,7 +777,12 @@ static int do_update(int argc, char **argv) {
   }
   string_array_unref(directories);
 
+  CubeCommandRunner *runner =
+      cube_command_runner_new_take(commands, &runner_callbacks, NULL);
+  cube_command_runner_run(runner);
+
   cube_project_unref(project);
+  cube_command_runner_unref(runner);
 
   return 1;
 }

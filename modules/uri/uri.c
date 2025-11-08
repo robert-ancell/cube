@@ -133,6 +133,20 @@ Uri *uri_new_from_string(const char *uri) {
   return uri_new_take(scheme, user_info, host, port, path, query, fragment);
 }
 
+const char *uri_get_scheme(Uri *self) { return self->scheme; }
+
+const char *uri_get_user_info(Uri *self) { return self->user_info; }
+
+const char *uri_get_host(Uri *self) { return self->host; }
+
+uint16_t uri_get_port(Uri *self) { return self->port; }
+
+const char *uri_get_path(Uri *self) { return self->path; }
+
+const char *uri_get_query(Uri *self) { return self->query; }
+
+const char *uri_get_fragment(Uri *self) { return self->fragment; }
+
 Uri *uri_ref(Uri *self) {
   self->ref++;
   return self;

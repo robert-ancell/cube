@@ -20,6 +20,11 @@ cube_command_runner_new(CubeCommandArray *commands,
                         const CubeCommandRunnerCallbacks *callbacks,
                         void *user_data);
 
+CubeCommandRunner *
+cube_command_runner_new_take(CubeCommandArray *commands,
+                             const CubeCommandRunnerCallbacks *callbacks,
+                             void *user_data);
+
 void cube_command_runner_run(CubeCommandRunner *self);
 
 CubeCommandRunnerError cube_command_runner_get_error(CubeCommandRunner *self);

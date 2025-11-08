@@ -67,9 +67,17 @@ CubeCommandRunner *
 cube_command_runner_new(CubeCommandArray *commands,
                         const CubeCommandRunnerCallbacks *callbacks,
                         void *user_data) {
+  return cube_command_runner_new_take(cube_command_array_ref(commands),
+                                      callbacks, user_data);
+}
+
+CubeCommandRunner *
+cube_command_runner_new_take(CubeCommandArray *commands,
+                             const CubeCommandRunnerCallbacks *callbacks,
+                             void *user_data) {
   CubeCommandRunner *self = malloc(sizeof(CubeCommandRunner));
 
-  self->commands = cube_command_array_ref(commands);
+  self->commands = commands;
   self->callbacks = callbacks;
   self->user_data = user_data;
   size_t commands_length = cube_command_array_get_length(self->commands);
