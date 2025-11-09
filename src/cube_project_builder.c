@@ -62,13 +62,47 @@ static CubeProject *load_import(CubeProjectBuilder *self, CubeImport *import) {
   }
 
   char *dir = get_import_dir(import);
-  CubeProject *import_project = load_project_from_path(dir);
+  project = load_project_from_path(dir);
   free(dir);
 
-  cube_project_map_insert(self->import_projects, url, import_project);
-  cube_project_unref(import_project);
+  cube_project_map_insert(self->import_projects, url, project);
+  cube_project_unref(project);
 
-  return import_project;
+  return project;
+}
+
+static CubeImport *get_module_import(CubeProject *project,
+                                     const char *module_name) {
+  CubeImportArray *imports = cube_project_get_imports(project);
+  size_t imports_length = cube_import_array_get_length(imports);
+  for (size_t i = 0; i < imports_length; i++) {
+    CubeImport *import = cube_import_array_get_element(imports, i);
+    if (string_array_contains(cube_import_get_modules(import), module_name)) {
+      return import;
+    }
+  }
+
+  return NULL;
+}
+
+static CubeModule *get_module(CubeProjectBuilder *self, CubeProject *project,
+                              const char *module_name) {
+  CubeModule *module = cube_project_get_module(project, module_name);
+  if (module != NULL) {
+    return module;
+  }
+
+  CubeImport *import = get_module_import(project, module_name);
+  if (import == NULL) {
+    return NULL;
+  }
+
+  CubeProject *import_project = load_import(self, import);
+  if (import_project == NULL) {
+    return NULL;
+  }
+
+  return get_module(self, import_project, module_name);
 }
 
 static char *get_compile_output(const char *build_dir, const char *input_path) {
@@ -217,8 +251,8 @@ static void add_compile_command(CubeCommandArray *commands,
   size_t include_directories_length =
       string_array_get_length(include_directories);
   for (size_t i = 0; i < include_directories_length; i++) {
-    const char *import = string_array_get_element(include_directories, i);
-    string_array_append_take(args, string_printf("-I%s", import));
+    const char *dir = string_array_get_element(include_directories, i);
+    string_array_append_take(args, string_printf("-I%s", dir));
   }
   string_array_append(args, source);
   string_array_append(args, "-o");
@@ -260,62 +294,67 @@ static void add_compile_directory(StringArray *directories,
   free(output_dir);
 }
 
-static void add_module_modules(CubeProject *project, CubeModule *module,
+static void add_module_modules(CubeProjectBuilder *self, CubeProject *project,
+                               CubeModule *module,
                                StringArray *all_module_names,
                                CubeModuleArray *all_modules);
 
-static void add_module(CubeProject *project, const char *module_name,
-                       StringArray *all_module_names,
+static void add_module(CubeProjectBuilder *self, CubeProject *project,
+                       const char *module_name, StringArray *all_module_names,
                        CubeModuleArray *all_modules) {
   if (string_array_contains(all_module_names, module_name)) {
     return;
   }
 
-  CubeModule *module = cube_project_get_module(project, module_name);
+  CubeModule *module = get_module(self, project, module_name);
   if (module == NULL) {
     return;
   }
 
   string_array_append(all_module_names, module_name);
   cube_module_array_append(all_modules, module);
-  add_module_modules(project, module, all_module_names, all_modules);
+  add_module_modules(self, project, module, all_module_names, all_modules);
 }
 
-static void add_modules(CubeProject *project, StringArray *module_names,
+static void add_modules(CubeProjectBuilder *self, CubeProject *project,
+                        StringArray *module_names,
                         StringArray *all_module_names,
                         CubeModuleArray *all_modules) {
   size_t module_names_length = string_array_get_length(module_names);
   for (size_t i = 0; i < module_names_length; i++) {
     const char *module_name = string_array_get_element(module_names, i);
-    add_module(project, module_name, all_module_names, all_modules);
+    add_module(self, project, module_name, all_module_names, all_modules);
   }
 }
 
 // Recursively add module depdencies to [all_module_names]
-static void add_module_modules(CubeProject *project, CubeModule *module,
+static void add_module_modules(CubeProjectBuilder *self, CubeProject *project,
+                               CubeModule *module,
                                StringArray *all_module_names,
                                CubeModuleArray *all_modules) {
-  add_modules(project, cube_module_get_modules(module), all_module_names,
+  add_modules(self, project, cube_module_get_modules(module), all_module_names,
               all_modules);
 }
 
 // Get all the modules this program uses (including dependencies).
-static CubeModuleArray *get_program_modules(CubeProject *project,
+static CubeModuleArray *get_program_modules(CubeProjectBuilder *self,
+                                            CubeProject *project,
                                             CubeProgram *program) {
   StringArray *all_module_names = string_array_new();
   CubeModuleArray *all_modules = cube_module_array_new();
-  add_modules(project, cube_program_get_modules(program), all_module_names,
-              all_modules);
+  add_modules(self, project, cube_program_get_modules(program),
+              all_module_names, all_modules);
   string_array_unref(all_module_names);
   return all_modules;
 }
 
 // Get all the modules this module uses (including dependencies)
-static CubeModuleArray *get_module_modules(CubeProject *project,
+static CubeModuleArray *get_module_modules(CubeProjectBuilder *self,
+                                           CubeProject *project,
                                            CubeModule *module) {
   StringArray *all_module_names = string_array_new();
   CubeModuleArray *all_modules = cube_module_array_new();
-  add_module_modules(project, module, all_module_names, all_modules);
+  add_module_modules(self, project, module, all_module_names, all_modules);
   string_array_unref(all_module_names);
   return all_modules;
 }
@@ -376,7 +415,7 @@ bool cube_project_builder_run(CubeProjectBuilder *self) {
   for (size_t i = 0; i < programs_length; i++) {
     CubeProgram *program = cube_program_array_get_element(programs, i);
 
-    CubeModuleArray *modules = get_program_modules(project, program);
+    CubeModuleArray *modules = get_program_modules(self, project, program);
     size_t modules_length = cube_module_array_get_length(modules);
     for (size_t j = 0; j < modules_length; j++) {
       CubeModule *module = cube_module_array_get_element(modules, j);
@@ -411,13 +450,14 @@ bool cube_project_builder_run(CubeProjectBuilder *self) {
     StringArray *all_sources = string_array_new();
     StringArray *inputs = string_array_new();
 
-    CubeModuleArray *modules = get_program_modules(project, program);
+    CubeModuleArray *modules = get_program_modules(self, project, program);
     size_t modules_length = cube_module_array_get_length(modules);
     StringArray *include_directories = string_array_new();
     for (size_t j = 0; j < modules_length; j++) {
       CubeModule *module = cube_module_array_get_element(modules, j);
 
-      CubeModuleArray *module_modules = get_module_modules(project, module);
+      CubeModuleArray *module_modules =
+          get_module_modules(self, project, module);
       StringArray *module_source_include_directories =
           get_module_include_directories(module_modules);
       cube_module_array_unref(module_modules);
