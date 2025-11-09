@@ -105,6 +105,33 @@ static CubeModule *get_module(CubeProjectBuilder *self, CubeProject *project,
   return get_module(self, import_project, module_name);
 }
 
+// Return the first import that provides this module.
+// FIXME: Inefficient, should cache this information
+static CubeImport *find_module_import(CubeProjectBuilder *self,
+                                      CubeProject *project,
+                                      const char *module_name) {
+  CubeImportArray *imports = cube_project_get_imports(project);
+  size_t imports_length = cube_import_array_get_length(imports);
+  for (size_t i = 0; i < imports_length; i++) {
+    CubeImport *import = cube_import_array_get_element(imports, i);
+    CubeProject *import_project = load_import(self, import);
+    if (import_project == NULL) {
+      continue;
+    }
+    if (cube_project_get_module(import_project, module_name) != NULL) {
+      return import;
+    }
+
+    CubeImport *module_import =
+        find_module_import(self, import_project, module_name);
+    if (module_import != NULL) {
+      return module_import;
+    }
+  }
+
+  return NULL;
+}
+
 static char *get_compile_output(const char *build_dir, const char *input_path) {
   assert(string_has_suffix(input_path, ".c"));
   StringBuilder *builder = string_builder_new();
@@ -237,7 +264,7 @@ static void add_compile_command(CubeCommandArray *commands,
 
   StringArray *inputs = string_array_new();
   string_array_append(inputs, build_dir);
-  add_depends(inputs, build_dir, source);
+  add_depends(inputs, build_dir, source); // FIXME: prefix
 
   StringArray *args = string_array_new();
   string_array_append(args, "clang");
@@ -254,7 +281,7 @@ static void add_compile_command(CubeCommandArray *commands,
     const char *dir = string_array_get_element(include_directories, i);
     string_array_append_take(args, string_printf("-I%s", dir));
   }
-  string_array_append(args, source);
+  string_array_append(args, source); // FIXME: prefix
   string_array_append(args, "-o");
   string_array_append(args, output_path);
 
@@ -423,6 +450,9 @@ bool cube_project_builder_run(CubeProjectBuilder *self) {
       size_t module_sources_length = string_array_get_length(module_sources);
       for (size_t k = 0; k < module_sources_length; k++) {
         const char *module_source = string_array_get_element(module_sources, k);
+
+        // FIXME: Add prefix for imports
+
         add_compile_directory(output_dirs, build_dir, module_source);
       }
     }
@@ -456,6 +486,13 @@ bool cube_project_builder_run(CubeProjectBuilder *self) {
     for (size_t j = 0; j < modules_length; j++) {
       CubeModule *module = cube_module_array_get_element(modules, j);
 
+      CubeImport *import = NULL;
+      if (cube_project_get_module(project, cube_module_get_name(module)) ==
+          NULL) {
+        import =
+            find_module_import(self, project, cube_module_get_name(module));
+      }
+
       CubeModuleArray *module_modules =
           get_module_modules(self, project, module);
       StringArray *module_source_include_directories =
@@ -467,13 +504,24 @@ bool cube_project_builder_run(CubeProjectBuilder *self) {
       for (size_t k = 0; k < module_sources_length; k++) {
         const char *module_source = string_array_get_element(module_sources, k);
 
+        char *module_source_path;
+        if (import != NULL) {
+          char *import_dir = get_import_dir(import);
+          module_source_path =
+              string_printf("%s/%s", import_dir, module_source);
+          free(import_dir);
+        } else {
+          module_source_path = string_copy(module_source);
+        }
+
         add_compile_command(commands, module_source_include_directories,
-                            build_dir, module_source);
+                            build_dir, module_source_path);
 
-        string_array_append_take(inputs,
-                                 get_compile_output(build_dir, module_source));
+        string_array_append_take(
+            inputs, get_compile_output(build_dir, module_source_path));
 
-        string_array_append(all_sources, module_source);
+        string_array_append(all_sources, module_source_path);
+        free(module_source_path);
       }
       string_array_unref(module_source_include_directories);
 
