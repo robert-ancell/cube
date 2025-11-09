@@ -36,6 +36,8 @@ static int value_compare(void *value1, void *value2) {
     if (d != 0) {
       return d;
     }
+
+    i++;
   }
 }
 

@@ -36,6 +36,8 @@ static int key_compare(void *key1, void *key2) {
     if (d != 0) {
       return d;
     }
+
+    i++;
   }
 }
 
